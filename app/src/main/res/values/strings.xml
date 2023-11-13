@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Thermostat</string>
+    <string name="power_label">Power</string>
 </resources>
