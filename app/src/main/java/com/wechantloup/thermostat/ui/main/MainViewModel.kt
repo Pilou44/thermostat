@@ -1,9 +1,12 @@
 package com.wechantloup.thermostat.ui.main
 
 import android.app.Application
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.database.database
 import com.wechantloup.thermostat.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -15,11 +18,14 @@ internal class MainViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
 
+    private val database = Firebase.database("https://thermostat-4211f-default-rtdb.europe-west1.firebasedatabase.app/")
+
     private val _stateFlow = MutableStateFlow(MainSate())
     val stateFlow: StateFlow<MainSate> = _stateFlow
 
     fun power(on: Boolean) {
         // ToDo
+        testDb()
         viewModelScope.launch {
             _stateFlow.emit(stateFlow.value.copy(poweredOn = on))
         }
@@ -40,6 +46,12 @@ internal class MainViewModel(
         viewModelScope.launch {
             _stateFlow.emit(stateFlow.value.copy(manualTemperature = temperature))
         }
+    }
+
+    private fun testDb() {
+        val myRef = database.getReference("test")
+        Log.i("TEST", "Write to db")
+        myRef.setValue("Hello, World!")
     }
 
     internal data class MainSate(
