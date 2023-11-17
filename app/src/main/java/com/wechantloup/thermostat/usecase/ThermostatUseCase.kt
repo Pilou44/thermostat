@@ -9,9 +9,11 @@ import com.google.firebase.database.database
 import com.google.firebase.database.getValue
 import com.wechantloup.thermostat.model.Command
 import com.wechantloup.thermostat.model.Mode
+import com.wechantloup.thermostat.model.Status
 
 class ThermostatUseCase(
     commandListener: CommandListener,
+    statusListener: StatusListener,
 ) {
 
     private val database = Firebase
@@ -19,10 +21,12 @@ class ThermostatUseCase(
         .reference
 
     private val commandChild = database.child(COMMAND_CHILD)
+    private val statusChild = database.child(STATUS_CHILD)
 
     init {
         checkExistingCommand()
         setCommandListener(commandListener)
+        setStatusListener(statusListener)
     }
 
     internal fun setManualTemperature(temperature: Int) {
@@ -54,7 +58,7 @@ class ThermostatUseCase(
     }
 
     private fun setCommandListener(commandListener: CommandListener) {
-        val fbCommandListener: ValueEventListener = object : ValueEventListener {
+        val fbListener: ValueEventListener = object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 val value = dataSnapshot.getValue<Command>() ?: return
                 commandListener.onCommandReceived(value)
@@ -67,13 +71,33 @@ class ThermostatUseCase(
             }
         }
         Log.i(TAG, "Add value listener")
-        commandChild.child(ROOM_ID).addValueEventListener(fbCommandListener)
+        commandChild.child(ROOM_ID).addValueEventListener(fbListener)
+    }
+
+    private fun setStatusListener(statusListener: StatusListener) {
+        val fbListener: ValueEventListener = object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                Log.i(TAG, "New status received")
+                val value = dataSnapshot.getValue<Status>() ?: return
+                Log.i(TAG, "New status received $value")
+                statusListener.onStatusReceived(value)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // ToDo Handle error
+                // Failed to read value
+                Log.w(TAG, "Failed to read value.", error.toException())
+            }
+        }
+        Log.i(TAG, "Add value listener")
+        statusChild.child(ROOM_ID).addValueEventListener(fbListener)
     }
 
     companion object {
         private const val TAG = "ThermostatUseCase"
 
         private const val COMMAND_CHILD = "commands"
+        private const val STATUS_CHILD = "statuses"
 
         private const val ROOM_ID = "room"
     }
@@ -81,4 +105,8 @@ class ThermostatUseCase(
 
 interface CommandListener {
     fun onCommandReceived(command: Command)
+}
+
+interface StatusListener {
+    fun onStatusReceived(status: Status)
 }

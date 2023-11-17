@@ -4,7 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.wechantloup.thermostat.model.Command
 import com.wechantloup.thermostat.model.Mode
+import com.wechantloup.thermostat.model.Status
 import com.wechantloup.thermostat.usecase.CommandListener
+import com.wechantloup.thermostat.usecase.StatusListener
 import com.wechantloup.thermostat.usecase.ThermostatUseCase
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -31,7 +33,15 @@ internal class MainViewModel(
                 )
             }
         }
-        useCase = ThermostatUseCase(commandListener)
+        val statusListener: StatusListener = object : StatusListener {
+            override fun onStatusReceived(status: Status) {
+                _stateFlow.value = stateFlow.value.copy(
+                    currentTemperature = status.temperature,
+                    currentlyOn = status.on,
+                )
+            }
+        }
+        useCase = ThermostatUseCase(commandListener, statusListener)
     }
 
     fun power(on: Boolean) {
