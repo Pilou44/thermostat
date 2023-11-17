@@ -36,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.wechantloup.thermostat.R
 import com.wechantloup.thermostat.model.Mode
+import com.wechantloup.thermostat.ui.compose.Loader
 import com.wechantloup.thermostat.ui.theme.Dimens
 import com.wechantloup.thermostat.ui.theme.ThermostatTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -48,6 +49,7 @@ internal fun ThermostatScreen(
     val state by viewModel.stateFlow.collectAsState()
 
     ThermostatScreen(
+        isLoading = state.loading,
         currentTemperature = state.currentTemperature,
         currentlyOn = state.currentlyOn,
         poweredOn = state.poweredOn,
@@ -62,6 +64,7 @@ internal fun ThermostatScreen(
 
 @Composable
 private fun ThermostatScreen(
+    isLoading: Boolean,
     currentTemperature: Float,
     currentlyOn: Boolean,
     poweredOn: Boolean,
@@ -99,6 +102,10 @@ private fun ThermostatScreen(
                 Modifier.fillMaxWidth(),
             )
         }
+        Loader(
+            isVisible = isLoading,
+            backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+        )
     }
 }
 

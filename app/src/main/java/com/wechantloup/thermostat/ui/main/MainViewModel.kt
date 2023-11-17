@@ -45,16 +45,23 @@ internal class MainViewModel(
     }
 
     fun power(on: Boolean) {
+        showLoader()
         useCase.setPowered(on)
     }
 
     fun selectMode(mode: Mode) {
+        showLoader()
         useCase.setMode(mode)
     }
 
     fun setTemperature(temperature: Int) {
+        showLoader()
         if (temperature > MAX_TEMPERATURE || temperature < MIN_TEMPERATURE) return
         useCase.setManualTemperature(temperature)
+    }
+
+    private fun showLoader() {
+        _stateFlow.value = stateFlow.value.copy(loading = true)
     }
 
     internal data class MainSate(
