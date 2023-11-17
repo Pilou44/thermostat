@@ -10,6 +10,8 @@ import com.google.firebase.database.getValue
 import com.wechantloup.thermostat.model.Command
 import com.wechantloup.thermostat.model.Mode
 import com.wechantloup.thermostat.model.Status
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class ThermostatUseCase(
     commandListener: CommandListener,
@@ -51,7 +53,7 @@ class ThermostatUseCase(
             if (existingValue == null) {
                 setCommand(Command())
             }
-        }.addOnFailureListener{
+        }.addOnFailureListener {
             // ToDo Handle error
             Log.e(TAG, "Error getting data", it)
         }

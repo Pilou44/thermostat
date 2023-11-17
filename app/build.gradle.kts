@@ -21,10 +21,25 @@ android {
         }
     }
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("../keys/keys.jks")
+            storePassword = "Br@ngwin"
+            keyAlias = "debug"
+            keyPassword = "Android"
+        }
+    }
+
     buildTypes {
+        debug{
+            isDebuggable = true
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -58,7 +73,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 
     // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.5.0"))
+    implementation("com.firebaseui:firebase-ui-auth:7.2.0")
+    implementation(platform("com.google.firebase:firebase-bom:32.6.0"))
     implementation("com.google.firebase:firebase-database-ktx")
 
     testImplementation("junit:junit:4.13.2")

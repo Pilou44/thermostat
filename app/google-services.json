@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1049859573645",
+    "firebase_url": "https://thermostat-4211f-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "thermostat-4211f",
+    "storage_bucket": "thermostat-4211f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049859573645:android:1ed397db51e5191eac5fc4",
+        "android_client_info": {
+          "package_name": "com.wechantloup.thermostat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1049859573645-12d9mm8gsrp4hh1u5nsha0j5t5uqdog7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wechantloup.thermostat",
+            "certificate_hash": "dd33d61e23dfddbfea97f1baafad751d5a9c500b"
+          }
+        },
+        {
+          "client_id": "1049859573645-8bq1ilkglijbtfdh73lknrnd8cc9dgqr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvmqtW3DyTD64ITrah4R504xZBAFQ4_0k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1049859573645-8bq1ilkglijbtfdh73lknrnd8cc9dgqr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

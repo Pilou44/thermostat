@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,11 +46,15 @@ import kotlinx.collections.immutable.toImmutableList
 @Composable
 internal fun ThermostatScreen(
     viewModel: MainViewModel,
+    signIn: () -> Unit,
+    signOut: () -> Unit,
 ) {
     val state by viewModel.stateFlow.collectAsState()
 
     ThermostatScreen(
         isLoading = state.loading,
+        isAuthenticated = state.isAuthenticated,
+        isAllowed = state.isAllowed,
         currentTemperature = state.currentTemperature,
         currentlyOn = state.currentlyOn,
         poweredOn = state.poweredOn,
@@ -59,12 +64,99 @@ internal fun ThermostatScreen(
         power = viewModel::power,
         selectMode = viewModel::selectMode,
         setTemperature = viewModel::setTemperature,
+        signIn = signIn,
+        signOut = signOut,
     )
 }
 
 @Composable
 private fun ThermostatScreen(
     isLoading: Boolean,
+    isAuthenticated: Boolean,
+    isAllowed: Boolean,
+    currentTemperature: Float,
+    currentlyOn: Boolean,
+    poweredOn: Boolean,
+    availableModes: ImmutableList<Mode>,
+    selectedMode: Mode,
+    manualTemperature: Int,
+    power: (Boolean) -> Unit,
+    selectMode: (Mode) -> Unit,
+    setTemperature: (Int) -> Unit,
+    signIn: () -> Unit,
+    signOut: () -> Unit,
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(text = stringResource(id = R.string.app_name))
+        },
+    ) {
+        when {
+            !isAuthenticated -> AuthenticateContent(it, signIn)
+            !isAllowed -> NotAllowedContent(it, signOut)
+            else -> ThermostatContent(
+                paddingValues = it,
+                currentTemperature = currentTemperature,
+                currentlyOn = currentlyOn,
+                poweredOn = poweredOn,
+                availableModes = availableModes,
+                selectedMode = selectedMode,
+                manualTemperature = manualTemperature,
+                power = power,
+                selectMode = selectMode,
+                setTemperature = setTemperature,
+            )
+        }
+        Loader(
+            isVisible = isLoading,
+            backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+            modifier = Modifier.padding(it)
+        )
+    }
+}
+
+@Composable
+private fun AuthenticateContent(
+    paddingValues: PaddingValues,
+    signIn: () -> Unit,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize(),
+    ) {
+        Button(onClick = signIn) {
+            Text(text = stringResource(id = R.string.sign_in_button_label))
+        }
+    }
+}
+
+@Composable
+private fun NotAllowedContent(
+    paddingValues: PaddingValues,
+    signOut: () -> Unit,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize(),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(text = stringResource(id = R.string.not_allowed_message))
+            Button(onClick = signOut) {
+                Text(text = stringResource(id = R.string.sign_out_button_label))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThermostatContent(
+    paddingValues: PaddingValues,
     currentTemperature: Float,
     currentlyOn: Boolean,
     poweredOn: Boolean,
@@ -75,36 +167,24 @@ private fun ThermostatScreen(
     selectMode: (Mode) -> Unit,
     setTemperature: (Int) -> Unit,
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                text = stringResource(id = R.string.app_name),
-            )
-        },
+    Column(
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
+        modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize()
+            .padding(Dimens.spacing2w),
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize()
-                .padding(Dimens.spacing2w),
-        ) {
-            StateModule(currentTemperature, currentlyOn, Modifier.fillMaxWidth())
-            PowerModule(poweredOn, power, Modifier.fillMaxWidth())
+        StateModule(currentTemperature, currentlyOn, Modifier.fillMaxWidth())
+        PowerModule(poweredOn, power, Modifier.fillMaxWidth())
 
-            if (!poweredOn) return@Column
+        if (!poweredOn) return@Column
 
-            ModeModule(availableModes, selectedMode, selectMode, Modifier.fillMaxWidth())
-            SetModule(
-                selectedMode,
-                manualTemperature,
-                setTemperature,
-                Modifier.fillMaxWidth(),
-            )
-        }
-        Loader(
-            isVisible = isLoading,
-            backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+        ModeModule(availableModes, selectedMode, selectMode, Modifier.fillMaxWidth())
+        SetModule(
+            selectedMode,
+            manualTemperature,
+            setTemperature,
+            Modifier.fillMaxWidth(),
         )
     }
 }
