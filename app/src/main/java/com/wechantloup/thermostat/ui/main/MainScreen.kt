@@ -1,5 +1,6 @@
 package com.wechantloup.thermostat.ui.main
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,9 +33,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wechantloup.thermostat.R
+import com.wechantloup.thermostat.model.Mode
 import com.wechantloup.thermostat.ui.theme.Dimens
 import com.wechantloup.thermostat.ui.theme.ThermostatTheme
 import kotlinx.collections.immutable.ImmutableList
@@ -207,7 +208,7 @@ private fun ModeModule(
                         onClick = { selectMode(mode) }
                     )
                     Text(
-                        text = stringResource(id = mode.labelRes),
+                        text = stringResource(id = getModeLabelRes(mode)),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -215,6 +216,12 @@ private fun ModeModule(
             }
         }
     }
+}
+
+@StringRes
+private fun getModeLabelRes(mode: Mode): Int = when (mode) {
+    Mode.MANUAL -> R.string.manual_mode_label
+    Mode.AUTO -> R.string.auto_mode_label
 }
 
 @Composable

@@ -1,60 +1,54 @@
 package com.wechantloup.thermostat.ui.main
 
 import android.app.Application
-import android.util.Log
-import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.firebase.Firebase
-import com.google.firebase.database.database
-import com.wechantloup.thermostat.R
+import com.wechantloup.thermostat.model.Command
+import com.wechantloup.thermostat.model.Mode
+import com.wechantloup.thermostat.usecase.CommandListener
+import com.wechantloup.thermostat.usecase.ThermostatUseCase
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
 internal class MainViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
 
-    private val database = Firebase.database("https://thermostat-4211f-default-rtdb.europe-west1.firebasedatabase.app/")
-
     private val _stateFlow = MutableStateFlow(MainSate())
     val stateFlow: StateFlow<MainSate> = _stateFlow
 
-    fun power(on: Boolean) {
-        // ToDo
-        testDb()
-        viewModelScope.launch {
-            _stateFlow.emit(stateFlow.value.copy(poweredOn = on))
+    private val useCase: ThermostatUseCase
+
+    init {
+        val commandListener: CommandListener = object : CommandListener {
+            override fun onCommandReceived(command: Command) {
+                _stateFlow.value = stateFlow.value.copy(
+                    loading = false,
+                    poweredOn = command.powerOn,
+                    selectedMode = command.mode,
+                    manualTemperature = command.manualTemperature,
+                )
+            }
         }
+        useCase = ThermostatUseCase(commandListener)
+    }
+
+    fun power(on: Boolean) {
+        useCase.setPowered(on)
     }
 
     fun selectMode(mode: Mode) {
-        // ToDo
-        viewModelScope.launch {
-            _stateFlow.emit(stateFlow.value.copy(selectedMode = mode))
-        }
+        useCase.setMode(mode)
     }
 
     fun setTemperature(temperature: Int) {
         if (temperature > MAX_TEMPERATURE || temperature < MIN_TEMPERATURE) return
-
-        // ToDo
-
-        viewModelScope.launch {
-            _stateFlow.emit(stateFlow.value.copy(manualTemperature = temperature))
-        }
-    }
-
-    private fun testDb() {
-        val myRef = database.getReference("test")
-        Log.i("TEST", "Write to db")
-        myRef.setValue("Hello, World!")
+        useCase.setManualTemperature(temperature)
     }
 
     internal data class MainSate(
+        val loading: Boolean = true, // ToDo
         val currentTemperature: Float = 0f,
         val currentlyOn: Boolean = false,
         val poweredOn: Boolean = false,
@@ -69,7 +63,4 @@ internal class MainViewModel(
     }
 }
 
-internal enum class Mode(val id: String, @StringRes val labelRes: Int) {
-    MANUAL("manual", R.string.manual_mode_label),
-    AUTO("auto", R.string.auto_mode_label),
-}
+
