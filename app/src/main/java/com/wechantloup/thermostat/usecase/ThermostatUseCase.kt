@@ -10,12 +10,10 @@ import com.google.firebase.database.getValue
 import com.wechantloup.thermostat.model.Command
 import com.wechantloup.thermostat.model.Mode
 import com.wechantloup.thermostat.model.Status
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
-class ThermostatUseCase(
-    commandListener: CommandListener,
-    statusListener: StatusListener,
+internal class ThermostatUseCase(
+    private val commandListener: CommandListener,
+    private val statusListener: StatusListener,
 ) {
 
     private val database = Firebase
@@ -25,30 +23,41 @@ class ThermostatUseCase(
     private val commandChild = database.child(COMMAND_CHILD)
     private val statusChild = database.child(STATUS_CHILD)
 
-    init {
+    private var roomId: String? = null
+    private var fbCommandListener: ValueEventListener? = null
+    private var fbStatusListener: ValueEventListener? = null
+
+    fun setRoomId(roomId: String) {
+        this.roomId = roomId
         checkExistingCommand()
-        setCommandListener(commandListener)
-        setStatusListener(statusListener)
+        setCommandListener()
+        setStatusListener()
     }
 
-    internal fun setManualTemperature(temperature: Int) {
-        commandChild.child(ROOM_ID).child("manualTemperature").setValue(temperature)
+    fun setManualTemperature(temperature: Int) {
+        val roomId = roomId ?: return
+        commandChild.child(roomId).child("manualTemperature").setValue(temperature)
     }
 
-    internal fun setPowered(on: Boolean) {
-        commandChild.child(ROOM_ID).child("powerOn").setValue(on)
+    fun setPowered(on: Boolean) {
+        val roomId = roomId ?: return
+        commandChild.child(roomId).child("powerOn").setValue(on)
     }
 
-    internal fun setMode(mode: Mode) {
-        commandChild.child(ROOM_ID).child("mode").setValue(mode)
+    fun setMode(mode: Mode) {
+        val roomId = roomId ?: return
+        commandChild.child(roomId).child("mode").setValue(mode)
     }
 
     private fun setCommand(command: Command) {
-        commandChild.child(ROOM_ID).setValue(command)
+        val roomId = roomId ?: return
+        commandChild.child(roomId).setValue(command)
     }
 
     private fun checkExistingCommand() {
-        commandChild.child(ROOM_ID).get().addOnSuccessListener {
+        val roomId = roomId ?: return
+
+        commandChild.child(roomId).get().addOnSuccessListener {
             val existingValue = it.value
             if (existingValue == null) {
                 setCommand(Command())
@@ -59,8 +68,16 @@ class ThermostatUseCase(
         }
     }
 
-    private fun setCommandListener(commandListener: CommandListener) {
-        val fbListener: ValueEventListener = object : ValueEventListener {
+    private fun setCommandListener() {
+        val roomId = roomId ?: return
+
+        val ref = commandChild.child(roomId)
+
+        fbCommandListener?.let {
+            ref.removeEventListener(it)
+        }
+
+        val fbListener = object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 val value = dataSnapshot.getValue<Command>() ?: return
                 commandListener.onCommandReceived(value)
@@ -71,12 +88,22 @@ class ThermostatUseCase(
                 // Failed to read value
                 Log.w(TAG, "Failed to read value.", error.toException())
             }
+        }.also {
+            fbCommandListener = it
         }
         Log.i(TAG, "Add value listener")
-        commandChild.child(ROOM_ID).addValueEventListener(fbListener)
+        ref.addValueEventListener(fbListener)
     }
 
-    private fun setStatusListener(statusListener: StatusListener) {
+    private fun setStatusListener() {
+        val roomId = roomId ?: return
+
+        val ref = statusChild.child(roomId)
+
+        fbStatusListener?.let {
+            ref.removeEventListener(it)
+        }
+
         val fbListener: ValueEventListener = object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 Log.i(TAG, "New status received")
@@ -90,9 +117,11 @@ class ThermostatUseCase(
                 // Failed to read value
                 Log.w(TAG, "Failed to read value.", error.toException())
             }
+        }.also {
+            fbStatusListener = it
         }
         Log.i(TAG, "Add value listener")
-        statusChild.child(ROOM_ID).addValueEventListener(fbListener)
+        ref.addValueEventListener(fbListener)
     }
 
     companion object {
@@ -100,8 +129,6 @@ class ThermostatUseCase(
 
         private const val COMMAND_CHILD = "commands"
         private const val STATUS_CHILD = "statuses"
-
-        private const val ROOM_ID = "room"
     }
 }
 

@@ -24,24 +24,9 @@ internal class ThermostatViewModel(
     private val _stateFlow = MutableStateFlow(ThermostatSate())
     val stateFlow: StateFlow<ThermostatSate> = _stateFlow
 
-    private var thermostatUseCase: ThermostatUseCase? = null
+    private val thermostatUseCase: ThermostatUseCase
 
     init {
-        relaunch()
-    }
-
-    fun relaunch() {
-        viewModelScope.launch {
-            init()
-        }
-    }
-
-    private suspend fun init() {
-        _stateFlow.emit(stateFlow.value.copy(loading = true))
-        initThermostat()
-    }
-
-    private suspend fun initThermostat() {
         val commandListener: CommandListener = object : CommandListener {
             override fun onCommandReceived(command: Command) {
                 _stateFlow.value = stateFlow.value.copy(
@@ -61,31 +46,32 @@ internal class ThermostatViewModel(
             }
         }
 
-        withContext(Dispatchers.IO) {
-            thermostatUseCase = ThermostatUseCase(commandListener, statusListener)
+        thermostatUseCase = ThermostatUseCase(commandListener, statusListener)
+    }
+
+    fun setRoomId(roomId: String) {
+        viewModelScope.launch {
+            _stateFlow.emit(stateFlow.value.copy(loading = true))
+            withContext(Dispatchers.IO) {
+                thermostatUseCase.setRoomId(roomId)
+            }
         }
     }
 
     fun power(on: Boolean) {
-        thermostatUseCase?.let {
-            showLoader()
-            it.setPowered(on)
-        }
+        showLoader()
+        thermostatUseCase.setPowered(on)
     }
 
     fun selectMode(mode: Mode) {
-        thermostatUseCase?.let {
-            showLoader()
-            it.setMode(mode)
-        }
+        showLoader()
+        thermostatUseCase.setMode(mode)
     }
 
     fun setTemperature(temperature: Int) {
         if (temperature > MAX_TEMPERATURE || temperature < MIN_TEMPERATURE) return
-        thermostatUseCase?.let {
-            showLoader()
-            it.setManualTemperature(temperature)
-        }
+        showLoader()
+        thermostatUseCase.setManualTemperature(temperature)
     }
 
     private fun showLoader() {
