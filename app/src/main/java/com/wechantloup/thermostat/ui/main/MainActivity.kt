@@ -5,11 +5,18 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.ComposeNavigator
+import androidx.navigation.compose.DialogNavigator
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
+import com.wechantloup.thermostat.ui.authentication.AuthenticationViewModel
+import com.wechantloup.thermostat.ui.roomselection.RoomSelectionViewModel
 import com.wechantloup.thermostat.ui.theme.ThermostatTheme
+import com.wechantloup.thermostat.ui.thermostat.ThermostatScreen
+import com.wechantloup.thermostat.ui.thermostat.ThermostatViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -20,30 +27,38 @@ class MainActivity : ComponentActivity() {
         this.onSignInResult(res)
     }
 
-    private val viewModel by viewModels<MainViewModel>()
+    private val authenticationViewModel by viewModels<AuthenticationViewModel>()
+    private val roomSelectionViewModel by viewModels<RoomSelectionViewModel>()
+    private val thermostatViewModel by viewModels<ThermostatViewModel>()
+
+    private val navController by lazy {
+        NavHostController(this).apply {
+            navigatorProvider.addNavigator(ComposeNavigator())
+            navigatorProvider.addNavigator(DialogNavigator())
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             ThermostatTheme {
-                ThermostatScreen(
-                    viewModel = viewModel,
-                    signIn = ::createSignInIntent,
-                    signOut = ::signOut,
+                NavigationHost(
+                    activity = this,
+                    navController = navController,
                 )
             }
         }
     }
 
-    private fun signOut() {
+    fun signOut() {
         AuthUI.getInstance()
             .signOut(this)
             .addOnCompleteListener {
-                viewModel.relaunch()
+                authenticationViewModel.relaunch()
             }
     }
 
-    private fun createSignInIntent() {
+    fun createSignInIntent() {
         // [START auth_fui_create_intent]
         // Choose authentication providers
         val providers = arrayListOf(
@@ -66,7 +81,7 @@ class MainActivity : ComponentActivity() {
             val user = FirebaseAuth.getInstance().currentUser
             Log.i("AUTH", "User id = ${user?.displayName}")
             Log.i("AUTH", "User id = ${user?.uid}")
-            viewModel.relaunch()
+            authenticationViewModel.relaunch()
             // ...
         } else {
             // Sign in failed. If response is null the user canceled the
