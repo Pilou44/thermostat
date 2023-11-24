@@ -75,7 +75,7 @@ internal fun NavigationHost(
                 viewModel = authenticationViewModel,
                 signIn = signIn,
                 signOut = signOut,
-                next = { navController.navigate(ROOM_SELECTION_SCREEN) },
+                next = { navController.navigate(ROOM_SELECTION_SCREEN) { popUpTo(0) } },
             )
         }
 
