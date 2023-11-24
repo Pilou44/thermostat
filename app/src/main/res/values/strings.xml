@@ -8,8 +8,14 @@
     <string name="sign_in_button_label">Sign In</string>
     <string name="sign_out_button_label">Sign Out</string>
     <string name="validate_button_label">Validate</string>
+    <string name="delete_button_label">Delete</string>
     <string name="settings_button_label">Settings</string>
     <string name="device_id_label">Device ID: %s</string>
     <string name="name_label">Name</string>
+    <string name="add_switch_button_label">Add new switch</string>
     <string name="not_allowed_message">You\'re not allowed using this application.</string>
+    <string name="unused_switch_label">%s (unused)</string>
+    <string name="used_switch_label">%s (used by \'%s\')</string>
+    <string name="create_new_switch_label">Create new switch</string>
+    <string name="switches_label">Switches</string>
 </resources>

@@ -1,7 +1,6 @@
 package com.wechantloup.thermostat.ui.thermostat
 
 import android.app.Application
-import android.icu.text.CaseMap.Title
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.wechantloup.thermostat.model.Command
@@ -57,7 +56,7 @@ internal class ThermostatViewModel(
             _stateFlow.emit(stateFlow.value.copy(loading = true))
 
             val device = settingsUseCase.getDevice(roomId)
-            _stateFlow.emit(stateFlow.value.copy(title = device.name.takeIf { it.isNotBlank() } ?: device.id))
+            _stateFlow.emit(stateFlow.value.copy(title = device.getLabel()))
 
             withContext(Dispatchers.IO) {
                 thermostatUseCase.setRoomId(roomId)

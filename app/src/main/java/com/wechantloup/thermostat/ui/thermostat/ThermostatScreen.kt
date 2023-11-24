@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -117,7 +118,10 @@ private fun ThermostatScreen(
 private fun Actions(
     goToSettings: () -> Unit,
 ) {
-    Button(onClick = goToSettings) {
+    IconButton(
+        onClick = goToSettings,
+        modifier = Modifier.padding(end = Dimens.spacing2w),
+    ) {
         Icon(
             imageVector = ImageVector.vectorResource(id = R.drawable.ic_settings_24),
             contentDescription = stringResource(id = R.string.settings_button_label),

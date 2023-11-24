@@ -4,7 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.wechantloup.thermostat.model.CommandDevice
+import com.wechantloup.thermostat.model.KnownSwitch
 import com.wechantloup.thermostat.model.Switch
+import com.wechantloup.thermostat.usecase.GetKnownSwitchesUseCase
 import com.wechantloup.thermostat.usecase.SettingsUseCase
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -21,6 +23,7 @@ internal class SettingsViewModel(
     val stateFlow: StateFlow<SettingsState> = _stateFlow
 
     private val settingsUseCase = SettingsUseCase()
+    private val getKnownSwitchesUseCase = GetKnownSwitchesUseCase()
 
     fun reload(deviceId: String) {
         viewModelScope.launch {
@@ -28,14 +31,16 @@ internal class SettingsViewModel(
 
             val device = settingsUseCase.getDevice(deviceId)
             val switches = settingsUseCase.getPairedSwitches(deviceId)
+            val knownSwitches = getKnownSwitchesUseCase.execute(deviceId)
 
             _stateFlow.emit(
                 stateFlow.value.copy(
                     loading = false,
-                    title = device.name.takeIf { it.isNotBlank() } ?: deviceId,
+                    title = device.getLabel(),
                     id = deviceId,
                     name = device.name,
                     switches = switches.toImmutableList(),
+                    knownSwitches = knownSwitches.toImmutableList(),
                 )
             )
         }
@@ -61,6 +66,7 @@ internal class SettingsViewModel(
         val id: String = "",
         val name: String = "",
         val switches: ImmutableList<Switch> = persistentListOf(),
+        val knownSwitches: ImmutableList<KnownSwitch> = persistentListOf(),
     )
 
     companion object {
