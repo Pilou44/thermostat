@@ -27,8 +27,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
@@ -44,11 +46,13 @@ import kotlinx.collections.immutable.toImmutableList
 @Composable
 internal fun ThermostatScreen(
     viewModel: ThermostatViewModel,
+    goToSettings: () -> Unit,
 ) {
     val state by viewModel.stateFlow.collectAsState()
 
     ThermostatScreen(
         isLoading = state.loading,
+        title = state.title,
         currentTemperature = state.currentTemperature,
         currentlyOn = state.currentlyOn,
         poweredOn = state.poweredOn,
@@ -58,12 +62,14 @@ internal fun ThermostatScreen(
         power = viewModel::power,
         selectMode = viewModel::selectMode,
         setTemperature = viewModel::setTemperature,
+        goToSettings = goToSettings,
     )
 }
 
 @Composable
 private fun ThermostatScreen(
     isLoading: Boolean,
+    title: String,
     currentTemperature: Float,
     currentlyOn: Boolean,
     poweredOn: Boolean,
@@ -73,14 +79,17 @@ private fun ThermostatScreen(
     power: (Boolean) -> Unit,
     selectMode: (Mode) -> Unit,
     setTemperature: (Int) -> Unit,
+    goToSettings: () -> Unit,
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(text = stringResource(id = R.string.app_name))
+            TopAppBar(
+                text = title,
+                actions = { Actions(goToSettings) },
+            )
         },
     ) {
         ThermostatContent(
-            paddingValues = it,
             currentTemperature = currentTemperature,
             currentlyOn = currentlyOn,
             poweredOn = poweredOn,
@@ -90,18 +99,34 @@ private fun ThermostatScreen(
             power = power,
             selectMode = selectMode,
             setTemperature = setTemperature,
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize(),
         )
         Loader(
             isVisible = isLoading,
             backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-            modifier = Modifier.padding(it)
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize(),
+        )
+    }
+}
+
+@Composable
+private fun Actions(
+    goToSettings: () -> Unit,
+) {
+    Button(onClick = goToSettings) {
+        Icon(
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_settings_24),
+            contentDescription = stringResource(id = R.string.settings_button_label),
         )
     }
 }
 
 @Composable
 private fun ThermostatContent(
-    paddingValues: PaddingValues,
     currentTemperature: Float,
     currentlyOn: Boolean,
     poweredOn: Boolean,
@@ -111,13 +136,11 @@ private fun ThermostatContent(
     power: (Boolean) -> Unit,
     selectMode: (Mode) -> Unit,
     setTemperature: (Int) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
-        modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()
-            .padding(Dimens.spacing2w),
+        modifier = modifier.padding(Dimens.spacing2w),
     ) {
         StateModule(currentTemperature, currentlyOn, Modifier.fillMaxWidth())
         PowerModule(poweredOn, power, Modifier.fillMaxWidth())

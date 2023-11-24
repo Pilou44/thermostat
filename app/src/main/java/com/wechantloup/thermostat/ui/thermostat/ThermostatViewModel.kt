@@ -1,12 +1,14 @@
 package com.wechantloup.thermostat.ui.thermostat
 
 import android.app.Application
+import android.icu.text.CaseMap.Title
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.wechantloup.thermostat.model.Command
 import com.wechantloup.thermostat.model.Mode
 import com.wechantloup.thermostat.model.Status
 import com.wechantloup.thermostat.usecase.CommandListener
+import com.wechantloup.thermostat.usecase.SettingsUseCase
 import com.wechantloup.thermostat.usecase.StatusListener
 import com.wechantloup.thermostat.usecase.ThermostatUseCase
 import kotlinx.collections.immutable.ImmutableList
@@ -25,6 +27,7 @@ internal class ThermostatViewModel(
     val stateFlow: StateFlow<ThermostatSate> = _stateFlow
 
     private val thermostatUseCase: ThermostatUseCase
+    private val settingsUseCase = SettingsUseCase()
 
     init {
         val commandListener: CommandListener = object : CommandListener {
@@ -52,6 +55,10 @@ internal class ThermostatViewModel(
     fun setRoomId(roomId: String) {
         viewModelScope.launch {
             _stateFlow.emit(stateFlow.value.copy(loading = true))
+
+            val device = settingsUseCase.getDevice(roomId)
+            _stateFlow.emit(stateFlow.value.copy(title = device.name.takeIf { it.isNotBlank() } ?: device.id))
+
             withContext(Dispatchers.IO) {
                 thermostatUseCase.setRoomId(roomId)
             }
@@ -80,6 +87,7 @@ internal class ThermostatViewModel(
 
     internal data class ThermostatSate(
         val loading: Boolean = true,
+        val title: String = "",
         val currentTemperature: Float = 0f,
         val currentlyOn: Boolean = false,
         val poweredOn: Boolean = false,

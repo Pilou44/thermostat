@@ -47,7 +47,7 @@ private fun RoomSelectionScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(it)
-                .fillMaxSize()
+                .fillMaxSize(),
         ) {
             items(
                 count = availableRooms.size,
@@ -58,7 +58,9 @@ private fun RoomSelectionScreen(
         Loader(
             isVisible = isLoading,
             backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-            modifier = Modifier.padding(it)
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize(),
         )
     }
 }

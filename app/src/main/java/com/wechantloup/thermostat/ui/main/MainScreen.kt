@@ -13,6 +13,8 @@ import com.wechantloup.thermostat.ui.authentication.AuthenticationScreen
 import com.wechantloup.thermostat.ui.authentication.AuthenticationViewModel
 import com.wechantloup.thermostat.ui.roomselection.RoomSelectionScreen
 import com.wechantloup.thermostat.ui.roomselection.RoomSelectionViewModel
+import com.wechantloup.thermostat.ui.settings.SettingsScreen
+import com.wechantloup.thermostat.ui.settings.SettingsViewModel
 import com.wechantloup.thermostat.ui.thermostat.ThermostatScreen
 import com.wechantloup.thermostat.ui.thermostat.ThermostatViewModel
 
@@ -21,8 +23,10 @@ internal const val ARG_ROOM_ID = "room_id"
 // Screens
 private const val AUTHENTICATION_SCREEN = "authentication_screen"
 private const val ROOM_SELECTION_SCREEN = "room_selection_screen"
-private const val THERMOSTAT_SCREEN = "thermostat_screen"
-internal const val THERMOSTAT_SCREEN_WITH_ARGS = "$THERMOSTAT_SCREEN/{$ARG_ROOM_ID}"
+private const val THERMOSTAT_COMMAND_SCREEN = "thermostat_command_screen"
+internal const val THERMOSTAT_COMMAND_SCREEN_WITH_ARGS = "$THERMOSTAT_COMMAND_SCREEN/{$ARG_ROOM_ID}"
+private const val THERMOSTAT_SETTINGS_SCREEN = "thermostat_settings_screen"
+internal const val THERMOSTAT_SETTINGS_SCREEN_WITH_ARGS = "$THERMOSTAT_SETTINGS_SCREEN/{$ARG_ROOM_ID}"
 
 @Composable
 internal fun NavigationHost(
@@ -47,13 +51,26 @@ internal fun NavigationHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
+    val thermostatViewModel = viewModel<ThermostatViewModel>(
+        viewModelStoreOwner = activity,
+        key = ThermostatViewModel.TAG,
+    )
+    val settingsViewModel = viewModel<SettingsViewModel>(
+        viewModelStoreOwner = activity,
+        key = SettingsViewModel.TAG,
+    )
+    val authenticationViewModel = viewModel<AuthenticationViewModel>(
+        viewModelStoreOwner = activity,
+        key = AuthenticationViewModel.TAG,
+    )
+    val roomSelectionViewModel = viewModel<RoomSelectionViewModel>(
+        viewModelStoreOwner = activity,
+        key = RoomSelectionViewModel.TAG,
+    )
+
     NavHost(navController = navController, startDestination = AUTHENTICATION_SCREEN, modifier) {
 
         composable(AUTHENTICATION_SCREEN) {
-            val authenticationViewModel = viewModel<AuthenticationViewModel>(
-                viewModelStoreOwner = activity,
-                key = AuthenticationViewModel.TAG,
-            )
             AuthenticationScreen(
                 viewModel = authenticationViewModel,
                 signIn = signIn,
@@ -63,30 +80,40 @@ internal fun NavigationHost(
         }
 
         composable(ROOM_SELECTION_SCREEN) {
-            val roomSelectionViewModel = viewModel<RoomSelectionViewModel>(
-                viewModelStoreOwner = activity,
-                key = RoomSelectionViewModel.TAG,
-            )
             RoomSelectionScreen(
                 viewModel = roomSelectionViewModel,
-                onRoomSelected = { roomId -> navController.navigate("$THERMOSTAT_SCREEN/$roomId") },
+                onRoomSelected = { roomId -> navController.navigate("$THERMOSTAT_COMMAND_SCREEN/$roomId") },
             )
         }
 
         composable(
-            THERMOSTAT_SCREEN_WITH_ARGS,
+            THERMOSTAT_COMMAND_SCREEN_WITH_ARGS,
             arguments = listOf(
                 navArgument(ARG_ROOM_ID) { type = NavType.StringType },
             ),
         ) {
             val roomId = requireNotNull(it.arguments?.getString(ARG_ROOM_ID))
-            val thermostatViewModel = viewModel<ThermostatViewModel>(
-                viewModelStoreOwner = activity,
-                key = ThermostatViewModel.TAG,
-            )
             thermostatViewModel.setRoomId(roomId)
             ThermostatScreen(
                 viewModel = thermostatViewModel,
+                goToSettings = { navController.navigate("$THERMOSTAT_SETTINGS_SCREEN/$roomId") },
+            )
+        }
+
+        composable(
+            THERMOSTAT_SETTINGS_SCREEN_WITH_ARGS,
+            arguments = listOf(
+                navArgument(ARG_ROOM_ID) { type = NavType.StringType },
+            ),
+        ) {
+            val roomId = requireNotNull(it.arguments?.getString(ARG_ROOM_ID))
+            settingsViewModel.reload(roomId)
+            SettingsScreen(
+                viewModel = settingsViewModel,
+                goBack = {
+                    thermostatViewModel.setRoomId(roomId)
+                    navController.popBackStack()
+                },
             )
         }
     }
