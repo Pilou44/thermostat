@@ -72,6 +72,17 @@ object DbProvider {
         }
     }
 
+    suspend inline fun <reified T> DatabaseReference.add(value: T) = withContext(Dispatchers.IO) {
+        suspendCoroutine { cont ->
+            setValue(value).addOnSuccessListener {
+                cont.resume(Unit)
+            }.addOnFailureListener {
+                Log.e(TAG, "Error setting data", it)
+                cont.resumeWithException(it)
+            }
+        }
+    }
+
     suspend inline fun <reified T> DatabaseReference.getAllValues(): List<T> {
         return getAll<T>().mapNotNull { it.second }
     }

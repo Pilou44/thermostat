@@ -6,6 +6,7 @@ import com.wechantloup.provider.DbProvider.getValue
 import com.wechantloup.provider.DbProvider.setValueWithCb
 import com.wechantloup.thermostat.model.CommandDevice
 import com.wechantloup.thermostat.model.Switch
+import com.wechantloup.thermostat.repository.SwitchRepository
 
 class SettingsUseCase {
     suspend fun getDevice(id: String): CommandDevice {
@@ -21,7 +22,7 @@ class SettingsUseCase {
     }
 
     suspend fun getAllSwitches(): List<Switch> {
-        return DbProvider.switchRef.getAllValues()
+        return SwitchRepository.getAllSwitches()
     }
 
     suspend fun getPairedSwitches(id: String): List<Switch> {

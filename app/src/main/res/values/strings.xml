@@ -18,4 +18,10 @@
     <string name="used_switch_label">%s (used by \'%s\')</string>
     <string name="create_new_switch_label">Create new switch</string>
     <string name="switches_label">Switches</string>
+    <string name="ip_label">IP address</string>
+    <string name="create_switch_dialog_title">Create new switch</string>
+    <string name="shelly_plus_1_type">Shelly Plus 1</string>
+    <string name="bad_ip_error_message">Bad IP address</string>
+    <string name="used_ip_error_message">Already used IP address</string>
+    <string name="unknown_error_message">Unknown error</string>
 </resources>

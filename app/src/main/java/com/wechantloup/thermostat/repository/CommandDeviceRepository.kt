@@ -4,7 +4,7 @@ import com.wechantloup.provider.DbProvider
 import com.wechantloup.provider.DbProvider.getAll
 import com.wechantloup.thermostat.model.CommandDevice
 
-class CommandDeviceRepository {
+object CommandDeviceRepository {
 
     suspend fun getAllCommandDevices(): List<CommandDevice> {
         return DbProvider
