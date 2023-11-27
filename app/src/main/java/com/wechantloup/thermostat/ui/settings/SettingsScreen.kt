@@ -70,6 +70,8 @@ internal fun SettingsScreen(
         startCreateNewSwitch = viewModel::startCreateNewSwitch,
         createNewSwitch = viewModel::createNewSwitch,
         createNewSwitchStatus = state.createSwitchStatus,
+        unpair = viewModel::unpairSwitch,
+        remove = viewModel::removeSwitch,
         validate = saveAndGoBack,
     )
 }
@@ -86,6 +88,8 @@ private fun SettingsScreen(
     startCreateNewSwitch: () -> Unit,
     createNewSwitch: (Switch) -> Unit,
     createNewSwitchStatus: CreateSwitchStatus?,
+    unpair: (Switch) -> Unit,
+    remove: (Switch) -> Unit,
     validate: () -> Unit,
 ) {
     Scaffold(
@@ -106,6 +110,8 @@ private fun SettingsScreen(
             startCreateNewSwitch = startCreateNewSwitch,
             createNewSwitch = createNewSwitch,
             createNewSwitchStatus = createNewSwitchStatus,
+            unpair = unpair,
+            remove = remove,
             modifier = Modifier
                 .padding(it)
                 .fillMaxSize(),
@@ -143,6 +149,8 @@ private fun SettingsContent(
     startCreateNewSwitch: () -> Unit,
     createNewSwitch: (Switch) -> Unit,
     createNewSwitchStatus: CreateSwitchStatus?,
+    unpair: (Switch) -> Unit,
+    remove: (Switch) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var isAddingSwitch by remember { mutableStateOf(false) }
@@ -170,7 +178,13 @@ private fun SettingsContent(
             key = { index -> "switch$index" },
             contentType = { "switch" },
         ) { index ->
-            Switch(switches[index])
+            Switch(
+                isLoading = isLoading,
+                id = id,
+                switch = switches[index],
+                unpair = unpair,
+                remove = remove,
+            )
         }
         if (isAddingSwitch) {
             item(
@@ -356,7 +370,7 @@ private fun CreateSwitchDialog(
                 ) {
                     TextField(
                         readOnly = true,
-                        value = getTypeName(type = selectedValue),
+                        value = selectedValue.getName(),
                         onValueChange = {},
                         label = { Text(stringResource(id = R.string.switches_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -373,7 +387,7 @@ private fun CreateSwitchDialog(
                     ) {
                         values.forEach { selectionOption ->
                             DropdownMenuItem(
-                                text = { Text(getTypeName(selectionOption)) },
+                                text = { Text(selectionOption.getName()) },
                                 onClick = {
                                     selectedValue = selectionOption
                                     expanded = false
@@ -409,9 +423,9 @@ private fun String.isValidIp(): Boolean = if (Build.VERSION.SDK_INT >= 29) {
 }
 
 @Composable
-private fun getTypeName(type: SwitchType): String {
+private fun SwitchType.getName(): String {
     val context = LocalContext.current
-    return when (type) {
+    return when (this) {
         SwitchType.SHELLY_PLUS_1 -> context.getString(R.string.shelly_plus_1_type)
     }
 }
@@ -432,8 +446,50 @@ private fun Name(
 
 
 @Composable
-private fun Switch(switch: Switch) {
+private fun Switch(
+    isLoading: Boolean,
+    id: String,
+    switch: Switch,
+    unpair: (Switch) -> Unit,
+    remove: (Switch) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var showRemoveDialog by remember { mutableStateOf(false) }
 
+    if (showRemoveDialog) {
+        RemoveSwitchDialog(
+            isLoading = isLoading,
+            id = id,
+            unpair = unpair,
+            remove = remove,
+            dismiss = { showRemoveDialog = false },
+        )
+    }
+    Row(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = "${switch.address} / ${switch.type.getName()}",
+            modifier = Modifier.weight(1f),
+        )
+        IconButton(onClick = { }) { // ToDo
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.ic_delete_16),
+                contentDescription = stringResource(id = R.string.delete_button_label),
+            )
+        }
+    }
+}
+
+@Composable
+fun RemoveSwitchDialog(
+    isLoading: Boolean,
+    id: String,
+    unpair: (Switch) -> Unit,
+    remove: (Switch) -> Unit,
+    dismiss: () -> Unit,
+) {
+    TODO("Not yet implemented")
 }
 
 internal enum class CreateSwitchStatus {

@@ -120,6 +120,14 @@ internal class SettingsViewModel(
         _stateFlow.value = stateFlow.value.copy(createSwitchStatus = null)
     }
 
+    fun unpairSwitch(switch: Switch) {
+        TODO("Not yet implemented")
+    }
+
+    fun removeSwitch(switch: Switch) {
+        TODO("Not yet implemented")
+    }
+
     internal data class SettingsState(
         val loading: Boolean = true,
         val title: String = "",
