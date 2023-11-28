@@ -25,6 +25,15 @@ object SwitchRepository {
             .set(dbSwitch)
     }
 
+    suspend fun pair(switch: Switch, deviceId: String) {
+        val (id, _) = switch.toDbSwitch()
+        DbProvider
+            .switchRef
+            .child(id)
+            .child("pairedDeviceId")
+            .set(deviceId)
+    }
+
     suspend fun unPair(switch: Switch) {
         val (id, _) = switch.toDbSwitch()
         DbProvider

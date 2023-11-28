@@ -70,6 +70,7 @@ internal fun SettingsScreen(
         startCreateNewSwitch = viewModel::startCreateNewSwitch,
         createNewSwitch = viewModel::createNewSwitch,
         createNewSwitchStatus = state.createSwitchStatus,
+        addSwitch = viewModel::addSwitch,
         unpair = viewModel::unpairSwitch,
         remove = viewModel::removeSwitch,
         validate = saveAndGoBack,
@@ -88,6 +89,7 @@ private fun SettingsScreen(
     startCreateNewSwitch: () -> Unit,
     createNewSwitch: (Switch) -> Unit,
     createNewSwitchStatus: CreateSwitchStatus?,
+    addSwitch: (Switch) -> Unit,
     unpair: (Switch) -> Unit,
     remove: (Switch) -> Unit,
     validate: () -> Unit,
@@ -110,6 +112,7 @@ private fun SettingsScreen(
             startCreateNewSwitch = startCreateNewSwitch,
             createNewSwitch = createNewSwitch,
             createNewSwitchStatus = createNewSwitchStatus,
+            addSwitch = addSwitch,
             unpair = unpair,
             remove = remove,
             modifier = Modifier
@@ -149,6 +152,7 @@ private fun SettingsContent(
     startCreateNewSwitch: () -> Unit,
     createNewSwitch: (Switch) -> Unit,
     createNewSwitchStatus: CreateSwitchStatus?,
+    addSwitch: (Switch) -> Unit,
     unpair: (Switch) -> Unit,
     remove: (Switch) -> Unit,
     modifier: Modifier = Modifier,
@@ -197,7 +201,7 @@ private fun SettingsContent(
                     startCreateNewSwitch = startCreateNewSwitch,
                     createNewSwitch = createNewSwitch,
                     createNewSwitchStatus = createNewSwitchStatus,
-                    validate = {},
+                    addSwitch = addSwitch,
                     cancel = { isAddingSwitch = false},
                 )
             }
@@ -225,14 +229,11 @@ private fun AddingSwitch(
     startCreateNewSwitch: () -> Unit,
     createNewSwitch: (Switch) -> Unit,
     createNewSwitchStatus: CreateSwitchStatus?,
-    validate: () -> Unit,
+    addSwitch: (Switch) -> Unit,
     cancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
-    LaunchedEffect(key1 = showCreateDialog) {
-        if (showCreateDialog) startCreateNewSwitch()
-    }
 
     if (showCreateDialog) {
         CreateSwitchDialog(
@@ -240,7 +241,10 @@ private fun AddingSwitch(
             id = id,
             createNewSwitch = createNewSwitch,
             createNewSwitchStatus = createNewSwitchStatus,
-            dismiss = { showCreateDialog = false },
+            dismiss = {
+                showCreateDialog = false
+                cancel()
+            },
         )
     }
 
@@ -248,7 +252,7 @@ private fun AddingSwitch(
         modifier = modifier.fillMaxWidth()
     ) {
         var expanded by remember { mutableStateOf(false) }
-        var selectedValue by remember { mutableStateOf(" ") }
+        var selectedValue by remember { mutableStateOf<Any?>(null) }
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = {
@@ -260,7 +264,11 @@ private fun AddingSwitch(
                 modifier = Modifier
                     .menuAnchor(), // menuAnchor modifier must be passed to the text field for correctness.
                 readOnly = true,
-                value = selectedValue,
+                value = when (val value = selectedValue) {
+                    is String -> value
+                    is KnownSwitch -> value.getLabel(LocalContext.current)
+                    else -> ""
+                },
                 onValueChange = {},
                 label = { Text(stringResource(id = R.string.switches_label)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -278,7 +286,7 @@ private fun AddingSwitch(
                     DropdownMenuItem(
                         text = { Text(selectionOption.getLabel(context)) },
                         onClick = {
-                            selectedValue = selectionOption.getLabel(context)
+                            selectedValue = selectionOption
                             expanded = false
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
@@ -288,6 +296,7 @@ private fun AddingSwitch(
                 DropdownMenuItem(
                     text = { Text(createNewSwitchLabel) },
                     onClick = {
+                        startCreateNewSwitch()
                         selectedValue = createNewSwitchLabel
                         expanded = false
                         showCreateDialog = true
@@ -296,7 +305,13 @@ private fun AddingSwitch(
                 )
             }
         }
-        IconButton(onClick = validate) {
+        IconButton(
+            enabled = selectedValue is KnownSwitch,
+            onClick = {
+                addSwitch((selectedValue as KnownSwitch).switch)
+                cancel()
+            },
+        ) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_check_16),
                 contentDescription = stringResource(id = R.string.validate_button_label),
