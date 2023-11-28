@@ -2,7 +2,7 @@ package com.wechantloup.thermostat.usecase
 
 import com.wechantloup.thermostat.repository.SwitchRepository
 import com.wechantloup.thermostat.model.KnownSwitch
-import com.wechantloup.thermostat.repository.CommandDeviceRepository
+import com.wechantloup.thermostat.repository.DeviceRepository
 
 class GetKnownSwitchesUseCase {
 
@@ -14,7 +14,7 @@ class GetKnownSwitchesUseCase {
             switches.filter { it.pairedDeviceId != excludingDeviceId }
         }
 
-        val devices = CommandDeviceRepository.getAllCommandDevices()
+        val devices = DeviceRepository.getAllDevices()
 
         return filteredSwitches.map { switch ->
             KnownSwitch(

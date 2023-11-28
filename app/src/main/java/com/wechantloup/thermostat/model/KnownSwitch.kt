@@ -5,7 +5,7 @@ import com.wechantloup.thermostat.R
 
 data class KnownSwitch(
     val switch: Switch,
-    val usedBy: CommandDevice?,
+    val usedBy: Device?,
 ) {
     fun getLabel(context: Context): String {
         if (usedBy == null) {

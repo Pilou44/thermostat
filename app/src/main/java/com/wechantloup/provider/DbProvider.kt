@@ -1,18 +1,22 @@
 package com.wechantloup.provider
 
-import android.media.MediaPlayer.OnCompletionListener
 import android.util.Log
 import com.google.firebase.Firebase
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import com.google.firebase.database.getValue
-import com.wechantloup.thermostat.model.CommandDevice
-import com.wechantloup.thermostat.usecase.AuthenticationUseCase
-import com.wechantloup.thermostat.usecase.RoomSelectionUseCase
-import com.wechantloup.thermostat.usecase.SettingsUseCase
-import com.wechantloup.thermostat.usecase.ThermostatUseCase
+import com.wechantloup.thermostat.model.Command
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.ProducerScope
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.sendBlocking
+import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -49,23 +53,11 @@ object DbProvider {
         }
     }
 
-    suspend fun <T: Any> DatabaseReference.setValueWithCb(value: T, cb: () -> Unit) = withContext(Dispatchers.IO) {
-        suspendCoroutine { cont ->
-            setValue(
-                value,
-            ) { error, ref ->
-                // ToDo Handle error
-                cont.resume(cb())
-            }
-        }
-    }
-
     suspend inline fun <reified T> DatabaseReference.getAll(): List<Pair<String, T?>> = withContext(Dispatchers.IO) {
         suspendCoroutine { cont ->
             get().addOnSuccessListener { snapshot ->
                 cont.resume(snapshot.children.mapNotNull { requireNotNull(it.key) to it.getValue<T>() })
             }.addOnFailureListener {
-                // ToDo Handle error
                 Log.e(TAG, "Error getting data", it)
                 cont.resumeWithException(it)
             }
@@ -83,11 +75,26 @@ object DbProvider {
         }
     }
 
-    suspend inline fun <reified T> DatabaseReference.getAllValues(): List<T> {
-        return getAll<T>().mapNotNull { it.second }
-    }
+    inline fun <reified T> DatabaseReference.subscribe(): Flow<T> = subscribe(T::class.java)
 
-    suspend fun DatabaseReference.getAllKeys(): List<String> {
-        return getAll<Any>().map { it.first }
+    fun <T> DatabaseReference.subscribe(dataType: Class<T>): Flow<T> = callbackFlow {
+        Log.i(TAG, "Subscribe to ${dataType.simpleName}")
+        val listener = object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                Log.i(TAG, "Data received for ${dataType.simpleName}")
+                val value = dataSnapshot.getValue(dataType) ?: return
+                trySend(value)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.w(TAG, "Cancel subscription for ${dataType.simpleName}")
+                cancel()
+            }
+        }
+        addValueEventListener(listener)
+        awaitClose {
+            Log.i(TAG, "Unsubscribe from ${dataType.simpleName}")
+            removeEventListener(listener)
+        }
     }
 }

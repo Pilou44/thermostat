@@ -7,7 +7,7 @@ import android.util.Log
 import android.util.Patterns
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.wechantloup.thermostat.model.CommandDevice
+import com.wechantloup.thermostat.model.Device
 import com.wechantloup.thermostat.model.KnownSwitch
 import com.wechantloup.thermostat.model.Switch
 import com.wechantloup.thermostat.usecase.CreateNewSwitchUseCase
@@ -57,7 +57,7 @@ internal class SettingsViewModel(
     }
 
     fun save(cb: () -> Unit) {
-        val device = CommandDevice(
+        val device = Device(
             id = stateFlow.value.id,
             name = stateFlow.value.name,
         )

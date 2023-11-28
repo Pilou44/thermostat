@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
-import com.wechantloup.thermostat.usecase.AuthenticationUseCase
+import com.wechantloup.thermostat.usecase.IsUserAuthorizedUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,7 +16,7 @@ internal class AuthenticationViewModel(
     private val _stateFlow = MutableStateFlow(AuthenticationSate())
     val stateFlow: StateFlow<AuthenticationSate> = _stateFlow
 
-    private val authenticationUseCase: AuthenticationUseCase = AuthenticationUseCase()
+    private val isUserAuthorizedUseCase: IsUserAuthorizedUseCase = IsUserAuthorizedUseCase()
 
     init {
         relaunch()
@@ -33,7 +33,7 @@ internal class AuthenticationViewModel(
 
         val user = FirebaseAuth.getInstance().currentUser
         val isAuthenticated = user != null
-        val isAllowed = user?.let { authenticationUseCase.isUserAllowed(user.uid) } ?: false
+        val isAllowed = user?.let { isUserAuthorizedUseCase.execute(user.uid) } ?: false
 
         _stateFlow.emit(
             stateFlow.value.copy(

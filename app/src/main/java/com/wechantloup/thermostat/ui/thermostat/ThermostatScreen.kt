@@ -1,5 +1,6 @@
 package com.wechantloup.thermostat.ui.thermostat
 
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -82,6 +83,7 @@ private fun ThermostatScreen(
     setTemperature: (Int) -> Unit,
     goToSettings: () -> Unit,
 ) {
+    Log.d("TEST", "Recompose ThermostatScreen")
     Scaffold(
         topBar = {
             TopAppBar(

@@ -1,6 +1,6 @@
 package com.wechantloup.thermostat.model
 
-data class CommandDevice(
+data class Device(
     val id: String,
     val name: String,
 ) {

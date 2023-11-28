@@ -1,5 +1,6 @@
 package com.wechantloup.thermostat.ui.main
 
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ internal fun NavigationHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
+    Log.d("TEST", "Recompose NavigationHost")
     val thermostatViewModel = viewModel<ThermostatViewModel>(
         viewModelStoreOwner = activity,
         key = ThermostatViewModel.TAG,
@@ -93,6 +95,7 @@ internal fun NavigationHost(
             ),
         ) {
             val roomId = requireNotNull(it.arguments?.getString(ARG_ROOM_ID))
+            Log.d("TEST", "Recompose Navigation ThermostatScreen $roomId")
             thermostatViewModel.setRoomId(roomId)
             ThermostatScreen(
                 viewModel = thermostatViewModel,

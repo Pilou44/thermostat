@@ -1,22 +1,22 @@
 package com.wechantloup.thermostat.ui.thermostat
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.wechantloup.thermostat.model.Command
 import com.wechantloup.thermostat.model.Mode
-import com.wechantloup.thermostat.model.Status
-import com.wechantloup.thermostat.usecase.CommandListener
 import com.wechantloup.thermostat.usecase.SettingsUseCase
-import com.wechantloup.thermostat.usecase.StatusListener
 import com.wechantloup.thermostat.usecase.ThermostatUseCase
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 internal class ThermostatViewModel(
     application: Application,
@@ -25,42 +25,44 @@ internal class ThermostatViewModel(
     private val _stateFlow = MutableStateFlow(ThermostatSate())
     val stateFlow: StateFlow<ThermostatSate> = _stateFlow
 
-    private val thermostatUseCase: ThermostatUseCase
+    private val thermostatUseCase = ThermostatUseCase()
     private val settingsUseCase = SettingsUseCase()
 
-    init {
-        val commandListener: CommandListener = object : CommandListener {
-            override fun onCommandReceived(command: Command) {
-                _stateFlow.value = stateFlow.value.copy(
-                    loading = false,
-                    poweredOn = command.powerOn,
-                    selectedMode = command.mode,
-                    manualTemperature = command.manualTemperature,
-                )
-            }
-        }
-        val statusListener: StatusListener = object : StatusListener {
-            override fun onStatusReceived(status: Status) {
-                _stateFlow.value = stateFlow.value.copy(
-                    currentTemperature = status.temperature,
-                    currentlyOn = status.on,
-                )
-            }
-        }
-
-        thermostatUseCase = ThermostatUseCase(commandListener, statusListener)
-    }
+    private var statusJob: Job? = null
+    private var commandJob: Job? = null
 
     fun setRoomId(roomId: String) {
-        viewModelScope.launch {
-            _stateFlow.emit(stateFlow.value.copy(loading = true))
+        _stateFlow.value = stateFlow.value.copy(loading = true)
 
-            val device = settingsUseCase.getDevice(roomId)
-            _stateFlow.emit(stateFlow.value.copy(title = device.getLabel()))
+        statusJob?.cancel()
+        commandJob?.cancel()
 
-            withContext(Dispatchers.IO) {
-                thermostatUseCase.setRoomId(roomId)
-            }
+        val deferredRoomId = viewModelScope.async { thermostatUseCase.setRoomId(roomId) }
+
+        statusJob = viewModelScope.launch {
+            deferredRoomId.await()
+            Log.d("TEST", "subscribeToStatuses")
+            thermostatUseCase.subscribeToStatuses()
+                .collect { status ->
+                    _stateFlow.value = stateFlow.value.copy(
+                        currentTemperature = status.temperature,
+                        currentlyOn = status.on,
+                    )
+                }
+        }
+
+        commandJob = viewModelScope.launch {
+            deferredRoomId.await()
+            Log.d("TEST", "subscribeToCommands")
+            thermostatUseCase.subscribeToCommands()
+                .collect { command ->
+                    _stateFlow.value = stateFlow.value.copy(
+                        loading = false,
+                        poweredOn = command.powerOn,
+                        selectedMode = command.mode,
+                        manualTemperature = command.manualTemperature,
+                    )
+                }
         }
     }
 
