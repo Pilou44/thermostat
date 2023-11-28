@@ -3,6 +3,7 @@ package com.wechantloup.thermostat.repository
 import com.wechantloup.provider.DbProvider
 import com.wechantloup.provider.DbProvider.set
 import com.wechantloup.provider.DbProvider.getAll
+import com.wechantloup.provider.DbProvider.remove
 import com.wechantloup.thermostat.model.Switch
 import com.wechantloup.thermostat.model.SwitchType
 
@@ -41,6 +42,14 @@ object SwitchRepository {
             .child(id)
             .child("pairedDeviceId")
             .set<String>(null)
+    }
+
+    suspend fun remove(switch: Switch) {
+        val (id, _) = switch.toDbSwitch()
+        DbProvider
+            .switchRef
+            .child(id)
+            .remove()
     }
 
     private fun Switch.toDbSwitch(): Pair<String, DbSwitch> {

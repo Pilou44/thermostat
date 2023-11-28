@@ -144,7 +144,21 @@ internal class SettingsViewModel(
     }
 
     fun removeSwitch(switch: Switch) {
-        TODO("Not yet implemented")
+        val deviceId = deviceId ?: return
+
+        viewModelScope.launch {
+            _stateFlow.emit(stateFlow.value.copy(loading = true))
+            SwitchRepository.remove(switch)
+            val switches = settingsUseCase.getPairedSwitches(deviceId)
+            val knownSwitches = getKnownSwitchesUseCase.execute(deviceId)
+            _stateFlow.emit(
+                stateFlow.value.copy(
+                    loading = false,
+                    switches = switches.toImmutableList(),
+                    knownSwitches = knownSwitches.toImmutableList(),
+                )
+            )
+        }
     }
 
     fun addSwitch(switch: Switch) {

@@ -71,6 +71,17 @@ object DbProvider {
         }
     }
 
+    suspend fun DatabaseReference.remove() = withContext(Dispatchers.IO) {
+        suspendCoroutine { cont ->
+            removeValue().addOnSuccessListener {
+                cont.resume(Unit)
+            }.addOnFailureListener {
+                Log.e(TAG, "Error removing data", it)
+                cont.resumeWithException(it)
+            }
+        }
+    }
+
     inline fun <reified T> DatabaseReference.subscribe(): Flow<T> = subscribe(T::class.java)
 
     fun <T> DatabaseReference.subscribe(dataType: Class<T>): Flow<T> = callbackFlow {
