@@ -1,8 +1,8 @@
 package com.wechantloup.thermostat.usecase
 
-import com.wechantloup.thermostat.repository.SwitchRepository
 import com.wechantloup.thermostat.model.KnownSwitch
 import com.wechantloup.thermostat.repository.DeviceRepository
+import com.wechantloup.thermostat.repository.SwitchRepository
 
 class GetKnownSwitchesUseCase {
 

@@ -15,7 +15,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.wechantloup.thermostat.ui.authentication.AuthenticationViewModel
 import com.wechantloup.thermostat.ui.roomselection.RoomSelectionViewModel
 import com.wechantloup.thermostat.ui.theme.ThermostatTheme
-import com.wechantloup.thermostat.ui.thermostat.ThermostatScreen
 import com.wechantloup.thermostat.ui.thermostat.ThermostatViewModel
 
 class MainActivity : ComponentActivity() {
