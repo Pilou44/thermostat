@@ -1,21 +1,19 @@
 package com.wechantloup.thermostat.ui.thermostat
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.wechantloup.thermostat.model.Device
 import com.wechantloup.thermostat.model.Mode
-import com.wechantloup.thermostat.usecase.SettingsUseCase
+import com.wechantloup.thermostat.usecase.HasCommandsUseCase
+import com.wechantloup.thermostat.usecase.SubscribeToCommandUseCase
+import com.wechantloup.thermostat.usecase.SubscribeToStatusUseCase
 import com.wechantloup.thermostat.usecase.ThermostatUseCase
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 internal class ThermostatViewModel(
@@ -26,23 +24,44 @@ internal class ThermostatViewModel(
     val stateFlow: StateFlow<ThermostatSate> = _stateFlow
 
     private val thermostatUseCase = ThermostatUseCase()
-    private val settingsUseCase = SettingsUseCase()
+    private val hasCommandsUseCase = HasCommandsUseCase()
+    private val subscribeToCommandsUseCase = SubscribeToCommandUseCase()
+    private val subscribeToStatusUseCase = SubscribeToStatusUseCase()
 
     private var statusJob: Job? = null
     private var commandJob: Job? = null
+    private var roomId: String? = null
+    override fun onCleared() {
+        super.onCleared()
+        statusJob?.cancel()
+        commandJob?.cancel()
+    }
 
-    fun setRoomId(roomId: String) {
-        _stateFlow.value = stateFlow.value.copy(loading = true)
+    fun setRoomId(id: String) {
+        showLoader()
+        _stateFlow.value = stateFlow.value.copy(
+            title = "",
+            poweredOn = false,
+            selectedMode = Mode.entries.first(),
+            manualTemperature = MIN_TEMPERATURE,
+        )
 
         statusJob?.cancel()
         commandJob?.cancel()
 
-        val deferredRoomId = viewModelScope.async { thermostatUseCase.setRoomId(roomId) }
+        roomId = id
+
+        viewModelScope.launch {
+            val device = Device.get(id)
+            _stateFlow.value = stateFlow.value.copy(title = device.getLabel())
+
+            if (!hasCommandsUseCase.execute(id)) {
+                _stateFlow.value = stateFlow.value.copy(loading = false)
+            }
+        }
 
         statusJob = viewModelScope.launch {
-            deferredRoomId.await()
-            Log.d("TEST", "subscribeToStatuses")
-            thermostatUseCase.subscribeToStatuses()
+            subscribeToStatusUseCase.execute(id)
                 .collect { status ->
                     _stateFlow.value = stateFlow.value.copy(
                         currentTemperature = status.temperature,
@@ -52,9 +71,7 @@ internal class ThermostatViewModel(
         }
 
         commandJob = viewModelScope.launch {
-            deferredRoomId.await()
-            Log.d("TEST", "subscribeToCommands")
-            thermostatUseCase.subscribeToCommands()
+            subscribeToCommandsUseCase.execute(id)
                 .collect { command ->
                     _stateFlow.value = stateFlow.value.copy(
                         loading = false,
@@ -67,19 +84,22 @@ internal class ThermostatViewModel(
     }
 
     fun power(on: Boolean) {
+        val roomId = roomId ?: return
         showLoader()
-        thermostatUseCase.setPowered(on)
+        thermostatUseCase.setPowered(roomId, on)
     }
 
     fun selectMode(mode: Mode) {
+        val roomId = roomId ?: return
         showLoader()
-        thermostatUseCase.setMode(mode)
+        thermostatUseCase.setMode(roomId, mode)
     }
 
     fun setTemperature(temperature: Int) {
         if (temperature > MAX_TEMPERATURE || temperature < MIN_TEMPERATURE) return
+        val roomId = roomId ?: return
         showLoader()
-        thermostatUseCase.setManualTemperature(temperature)
+        thermostatUseCase.setManualTemperature(roomId, temperature)
     }
 
     private fun showLoader() {

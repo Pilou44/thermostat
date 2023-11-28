@@ -3,7 +3,7 @@ package com.wechantloup.thermostat.ui.roomselection
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.wechantloup.thermostat.usecase.GetAllRoomsUseCase
+import com.wechantloup.thermostat.model.Device
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -18,11 +18,9 @@ internal class RoomSelectionViewModel(
     private val _stateFlow = MutableStateFlow(RoomSelectionSate())
     val stateFlow: StateFlow<RoomSelectionSate> = _stateFlow
 
-    private val getAllRoomsUseCase = GetAllRoomsUseCase()
-
     init {
         viewModelScope.launch {
-            val availableRooms = getAllRoomsUseCase.execute()
+            val availableRooms = Device.getAll()
             _stateFlow.emit(stateFlow.value.copy(
                 loading = false,
                 availableRooms = availableRooms.map { it.id }.toImmutableList(),
