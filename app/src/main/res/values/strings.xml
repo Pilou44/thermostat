@@ -8,6 +8,7 @@
     <string name="sign_in_button_label">Sign In</string>
     <string name="sign_out_button_label">Sign Out</string>
     <string name="validate_button_label">Validate</string>
+    <string name="unpair_button_label">Unpair</string>
     <string name="delete_button_label">Delete</string>
     <string name="settings_button_label">Settings</string>
     <string name="device_id_label">Device ID: %s</string>
@@ -20,6 +21,7 @@
     <string name="switches_label">Switches</string>
     <string name="ip_label">IP address</string>
     <string name="create_switch_dialog_title">Create new switch</string>
+    <string name="remove_switch_dialog_title">Do you want to unpair or delete switch?</string>
     <string name="shelly_plus_1_type">Shelly Plus 1</string>
     <string name="bad_ip_error_message">Bad IP address</string>
     <string name="used_ip_error_message">Already used IP address</string>

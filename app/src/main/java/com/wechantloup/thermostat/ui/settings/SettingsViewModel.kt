@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.wechantloup.thermostat.model.Device
 import com.wechantloup.thermostat.model.KnownSwitch
 import com.wechantloup.thermostat.model.Switch
+import com.wechantloup.thermostat.repository.SwitchRepository
 import com.wechantloup.thermostat.usecase.CreateNewSwitchUseCase
 import com.wechantloup.thermostat.usecase.GetKnownSwitchesUseCase
 import com.wechantloup.thermostat.usecase.SettingsUseCase
@@ -31,7 +32,11 @@ internal class SettingsViewModel(
     private val getKnownSwitchesUseCase = GetKnownSwitchesUseCase()
     private val createNewSwitchUseCase = CreateNewSwitchUseCase()
 
+    private var deviceId: String? = null
+
     fun reload(deviceId: String) {
+        this.deviceId = deviceId
+
         viewModelScope.launch {
             _stateFlow.emit(stateFlow.value.copy(loading = true))
 
@@ -121,7 +126,21 @@ internal class SettingsViewModel(
     }
 
     fun unpairSwitch(switch: Switch) {
-        TODO("Not yet implemented")
+        val deviceId = deviceId ?: return
+
+        viewModelScope.launch {
+            _stateFlow.emit(stateFlow.value.copy(loading = true))
+            SwitchRepository.unPair(switch)
+            val switches = settingsUseCase.getPairedSwitches(deviceId)
+            val knownSwitches = getKnownSwitchesUseCase.execute(deviceId)
+            _stateFlow.emit(
+                stateFlow.value.copy(
+                    loading = false,
+                    switches = switches.toImmutableList(),
+                    knownSwitches = knownSwitches.toImmutableList(),
+                )
+            )
+        }
     }
 
     fun removeSwitch(switch: Switch) {

@@ -1,7 +1,7 @@
 package com.wechantloup.thermostat.repository
 
 import com.wechantloup.provider.DbProvider
-import com.wechantloup.provider.DbProvider.add
+import com.wechantloup.provider.DbProvider.set
 import com.wechantloup.provider.DbProvider.getAll
 import com.wechantloup.provider.DbProvider.getValue
 import com.wechantloup.thermostat.model.Device
@@ -35,6 +35,6 @@ object DeviceRepository {
         DbProvider
             .deviceRef
             .child(device.id)
-            .add(device.name)
+            .set(device.name)
     }
 }

@@ -8,13 +8,9 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import com.google.firebase.database.getValue
-import com.wechantloup.thermostat.model.Command
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.sendBlocking
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
@@ -64,7 +60,7 @@ object DbProvider {
         }
     }
 
-    suspend inline fun <reified T> DatabaseReference.add(value: T) = withContext(Dispatchers.IO) {
+    suspend inline fun <reified T> DatabaseReference.set(value: T?) = withContext(Dispatchers.IO) {
         suspendCoroutine { cont ->
             setValue(value).addOnSuccessListener {
                 cont.resume(Unit)

@@ -180,7 +180,6 @@ private fun SettingsContent(
         ) { index ->
             Switch(
                 isLoading = isLoading,
-                id = id,
                 switch = switches[index],
                 unpair = unpair,
                 remove = remove,
@@ -448,7 +447,6 @@ private fun Name(
 @Composable
 private fun Switch(
     isLoading: Boolean,
-    id: String,
     switch: Switch,
     unpair: (Switch) -> Unit,
     remove: (Switch) -> Unit,
@@ -459,20 +457,21 @@ private fun Switch(
     if (showRemoveDialog) {
         RemoveSwitchDialog(
             isLoading = isLoading,
-            id = id,
+            switch = switch,
             unpair = unpair,
             remove = remove,
             dismiss = { showRemoveDialog = false },
         )
     }
     Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth()
     ) {
         Text(
             text = "${switch.address} / ${switch.type.getName()}",
             modifier = Modifier.weight(1f),
         )
-        IconButton(onClick = { }) { // ToDo
+        IconButton(onClick = { showRemoveDialog = true }) {
             Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_delete_16),
                 contentDescription = stringResource(id = R.string.delete_button_label),
@@ -484,12 +483,51 @@ private fun Switch(
 @Composable
 fun RemoveSwitchDialog(
     isLoading: Boolean,
-    id: String,
+    switch: Switch,
     unpair: (Switch) -> Unit,
     remove: (Switch) -> Unit,
     dismiss: () -> Unit,
 ) {
-    TODO("Not yet implemented")
+    Dialog(onDismissRequest = dismiss) {
+        Card {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
+                modifier = Modifier.padding(Dimens.spacing2w)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.remove_switch_dialog_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Button(
+                        onClick = {
+                            unpair(switch)
+                            dismiss()
+                        },
+                        enabled = !isLoading,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = stringResource(id = R.string.unpair_button_label))
+                    }
+                    Button(
+                        onClick = {
+                            remove(switch)
+                            dismiss()
+                        },
+                        enabled = !isLoading,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = stringResource(id = R.string.delete_button_label))
+                    }
+                }
+            }
+        }
+    }
 }
 
 internal enum class CreateSwitchStatus {
@@ -508,6 +546,20 @@ private fun CreateSwitchDialogPreview() {
             id = "toto",
             createNewSwitch = {},
             createNewSwitchStatus = null,
+            dismiss = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun RemoveSwitchDialogPreview() {
+    ThermostatTheme {
+        RemoveSwitchDialog(
+            isLoading = false,
+            switch = Switch("", SwitchType.SHELLY_PLUS_1, ""),
+            unpair = {},
+            remove = {},
             dismiss = {},
         )
     }
