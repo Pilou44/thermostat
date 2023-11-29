@@ -1,8 +1,8 @@
 package com.wechantloup.thermostat.repository
 
-import com.wechantloup.provider.DbProvider
-import com.wechantloup.provider.DbProvider.getAll
-import com.wechantloup.provider.DbProvider.subscribe
+import com.wechantloup.thermostat.provider.DbProvider
+import com.wechantloup.thermostat.provider.DbProvider.getAll
+import com.wechantloup.thermostat.provider.DbProvider.subscribe
 import com.wechantloup.thermostat.model.Status
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

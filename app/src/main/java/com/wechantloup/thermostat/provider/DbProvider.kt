@@ -1,4 +1,4 @@
-package com.wechantloup.provider
+package com.wechantloup.thermostat.provider
 
 import android.util.Log
 import com.google.firebase.Firebase

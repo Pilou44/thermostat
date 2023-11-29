@@ -1,9 +1,9 @@
 package com.wechantloup.thermostat.repository
 
-import com.wechantloup.provider.DbProvider
-import com.wechantloup.provider.DbProvider.getAll
-import com.wechantloup.provider.DbProvider.getValue
-import com.wechantloup.provider.DbProvider.set
+import com.wechantloup.thermostat.provider.DbProvider
+import com.wechantloup.thermostat.provider.DbProvider.getAll
+import com.wechantloup.thermostat.provider.DbProvider.getValue
+import com.wechantloup.thermostat.provider.DbProvider.set
 import com.wechantloup.thermostat.model.Device
 
 object DeviceRepository {

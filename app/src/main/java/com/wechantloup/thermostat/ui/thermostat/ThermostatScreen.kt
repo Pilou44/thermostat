@@ -2,6 +2,7 @@ package com.wechantloup.thermostat.ui.thermostat
 
 import android.util.Log
 import androidx.annotation.StringRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,9 +35,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wechantloup.thermostat.R
 import com.wechantloup.thermostat.model.Mode
+import com.wechantloup.thermostat.ui.compose.DayTime
+import com.wechantloup.thermostat.ui.compose.DayTimeLine
 import com.wechantloup.thermostat.ui.compose.Loader
 import com.wechantloup.thermostat.ui.compose.TopAppBar
 import com.wechantloup.thermostat.ui.theme.Dimens
@@ -346,7 +350,52 @@ private fun ManualModule(
 private fun AutomaticModule(
     modifier: Modifier = Modifier,
 ) {
-
+    val dayTime = DayTime(
+        listOf(
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+        )
+    )
+        Column(
+            modifier = modifier,
+        ) {
+            DayTimeLine(
+                dayTime = dayTime,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .background(MaterialTheme.colorScheme.background)
+            )
+            DayTimeLine(
+                dayTime = dayTime,
+                modifier = Modifier
+                    .width(200.dp)
+                    .height(50.dp)
+                    .background(MaterialTheme.colorScheme.background)
+            )
+        }
 }
 
 @Preview
