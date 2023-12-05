@@ -1,7 +1,7 @@
 package com.wechantloup.thermostat.model
 
 import com.wechantloup.thermostat.repository.DeviceRepository
-import com.wechantloup.thermostat.repository.StatusRepository
+import com.wechantloup.thermostat.repository.ThermostatRepository
 
 data class Device(
     val id: String,
@@ -13,7 +13,7 @@ data class Device(
 
     companion object {
         suspend fun getAll(): List<Device> {
-            val deviceIds = StatusRepository.getStatuses().map { it.deviceId }
+            val deviceIds = ThermostatRepository.getThermostats().map { it.deviceId }
             val devices = DeviceRepository.getAllDevices()
             return deviceIds.map { deviceId ->
                 Device(

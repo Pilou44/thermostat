@@ -1,26 +1,35 @@
 package com.wechantloup.thermostat.repository
 
-import com.wechantloup.thermostat.provider.DbProvider
-import com.wechantloup.thermostat.provider.DbProvider.getValue
-import com.wechantloup.thermostat.provider.DbProvider.subscribe
 import com.wechantloup.thermostat.model.Command
 import com.wechantloup.thermostat.model.Mode
+import com.wechantloup.thermostat.provider.DbProvider
+import com.wechantloup.thermostat.provider.DbProvider.getValue
+import com.wechantloup.thermostat.provider.DbProvider.set
+import com.wechantloup.thermostat.provider.DbProvider.subscribe
 import kotlinx.coroutines.flow.Flow
 
 object CommandRepository {
 
     private const val TAG = "CommandRepository"
 
-    fun setManualTemperature(deviceId: String, temperature: Int) {
-        DbProvider.commandRef.child(deviceId).child("manualTemperature").setValue(temperature)
+    suspend fun setManualTemperature(deviceId: String, temperature: Int) {
+        DbProvider.commandRef.child(deviceId).child("manualTemperature").set(temperature)
     }
 
-    fun setPowered(deviceId: String, on: Boolean) {
-        DbProvider.commandRef.child(deviceId).child("powerOn").setValue(on)
+    suspend fun setDayTemperature(deviceId: String, temperature: Int) {
+        DbProvider.commandRef.child(deviceId).child("automaticTemperatureDay").set(temperature)
     }
 
-    fun setMode(deviceId: String, mode: Mode) {
-        DbProvider.commandRef.child(deviceId).child("mode").setValue(mode)
+    suspend fun setNightTemperature(deviceId: String, temperature: Int) {
+        DbProvider.commandRef.child(deviceId).child("automaticTemperatureNight").set(temperature)
+    }
+
+    suspend fun setPowered(deviceId: String, on: Boolean) {
+        DbProvider.commandRef.child(deviceId).child("powerOn").set(on)
+    }
+
+    suspend fun setMode(deviceId: String, mode: Mode) {
+        DbProvider.commandRef.child(deviceId).child("mode").set(mode)
     }
 
     suspend fun getCommand(deviceId: String): Command? {
@@ -30,8 +39,8 @@ object CommandRepository {
             .getValue<Command>()
     }
 
-    fun setCommand(deviceId: String, command: Command) {
-        DbProvider.commandRef.child(deviceId).setValue(command)
+    suspend fun setCommand(deviceId: String, command: Command) {
+        DbProvider.commandRef.child(deviceId).set(command)
     }
 
     fun subscribe(deviceId: String): Flow<Command> {

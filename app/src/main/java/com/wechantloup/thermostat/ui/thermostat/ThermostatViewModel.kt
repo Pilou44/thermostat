@@ -1,20 +1,23 @@
 package com.wechantloup.thermostat.ui.thermostat
 
 import android.app.Application
+import android.text.format.DateFormat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.wechantloup.thermostat.model.Command
 import com.wechantloup.thermostat.model.Device
 import com.wechantloup.thermostat.model.Mode
+import com.wechantloup.thermostat.repository.CommandRepository
+import com.wechantloup.thermostat.repository.ThermostatRepository
 import com.wechantloup.thermostat.usecase.HasCommandsUseCase
-import com.wechantloup.thermostat.usecase.SubscribeToCommandUseCase
-import com.wechantloup.thermostat.usecase.SubscribeToStatusUseCase
-import com.wechantloup.thermostat.usecase.ThermostatUseCase
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.GregorianCalendar
 
 internal class ThermostatViewModel(
     application: Application,
@@ -23,30 +26,26 @@ internal class ThermostatViewModel(
     private val _stateFlow = MutableStateFlow(ThermostatSate())
     val stateFlow: StateFlow<ThermostatSate> = _stateFlow
 
-    private val thermostatUseCase = ThermostatUseCase()
     private val hasCommandsUseCase = HasCommandsUseCase()
-    private val subscribeToCommandsUseCase = SubscribeToCommandUseCase()
-    private val subscribeToStatusUseCase = SubscribeToStatusUseCase()
 
-    private var statusJob: Job? = null
+    private var thermostatJob: Job? = null
     private var commandJob: Job? = null
     private var roomId: String? = null
     override fun onCleared() {
         super.onCleared()
-        statusJob?.cancel()
+        thermostatJob?.cancel()
         commandJob?.cancel()
     }
 
     fun setRoomId(id: String) {
         showLoader()
+        val newCommand = Command()
         _stateFlow.value = stateFlow.value.copy(
             title = "",
             poweredOn = false,
-            selectedMode = Mode.entries.first(),
-            manualTemperature = MIN_TEMPERATURE,
         )
 
-        statusJob?.cancel()
+        thermostatJob?.cancel()
         commandJob?.cancel()
 
         roomId = id
@@ -56,28 +55,35 @@ internal class ThermostatViewModel(
             _stateFlow.value = stateFlow.value.copy(title = device.getLabel())
 
             if (!hasCommandsUseCase.execute(id)) {
-                _stateFlow.value = stateFlow.value.copy(loading = false)
+                CommandRepository.setCommand(id, newCommand)
             }
         }
 
-        statusJob = viewModelScope.launch {
-            subscribeToStatusUseCase.execute(id)
-                .collect { status ->
+        thermostatJob = viewModelScope.launch {
+            ThermostatRepository.subscribe(id)
+                .collect { thermostat ->
                     _stateFlow.value = stateFlow.value.copy(
-                        currentTemperature = status.temperature,
-                        currentlyOn = status.on,
+                        currentTemperature = thermostat.temperature,
+                        currentlyOn = thermostat.on,
+                        lastTimeUpdated = thermostat.time.toDayTime()
                     )
                 }
         }
 
         commandJob = viewModelScope.launch {
-            subscribeToCommandsUseCase.execute(id)
+            CommandRepository.subscribe(id)
                 .collect { command ->
                     _stateFlow.value = stateFlow.value.copy(
                         loading = false,
                         poweredOn = command.powerOn,
                         selectedMode = command.mode,
                         manualTemperature = command.manualTemperature,
+                        automaticTemperatureDay = command.automaticTemperatureDay,
+                        automaticTemperatureNight = command.automaticTemperatureNight,
+                        automaticTemperatures = command.automaticTemperatures
+                            .map {
+                                it.toImmutableList()
+                            }.toImmutableList(),
                     )
                 }
         }
@@ -86,24 +92,64 @@ internal class ThermostatViewModel(
     fun power(on: Boolean) {
         val roomId = roomId ?: return
         showLoader()
-        thermostatUseCase.setPowered(roomId, on)
+        viewModelScope.launch {
+            CommandRepository.setPowered(roomId, on)
+        }
     }
 
     fun selectMode(mode: Mode) {
         val roomId = roomId ?: return
         showLoader()
-        thermostatUseCase.setMode(roomId, mode)
+        viewModelScope.launch {
+            CommandRepository.setMode(roomId, mode)
+        }
     }
 
     fun setTemperature(temperature: Int) {
         if (temperature > MAX_TEMPERATURE || temperature < MIN_TEMPERATURE) return
         val roomId = roomId ?: return
         showLoader()
-        thermostatUseCase.setManualTemperature(roomId, temperature)
+        viewModelScope.launch {
+            CommandRepository.setManualTemperature(roomId, temperature)
+        }
+    }
+
+    fun setDayTemperature(temperature: Int) {
+        if (temperature > MAX_TEMPERATURE || temperature < MIN_TEMPERATURE) return
+        val roomId = roomId ?: return
+        showLoader()
+        viewModelScope.launch {
+            CommandRepository.setDayTemperature(roomId, temperature)
+        }
+    }
+
+    fun setNightTemperature(temperature: Int) {
+        if (temperature > MAX_TEMPERATURE || temperature < MIN_TEMPERATURE) return
+        val roomId = roomId ?: return
+        showLoader()
+        viewModelScope.launch {
+            CommandRepository.setNightTemperature(roomId, temperature)
+        }
     }
 
     private fun showLoader() {
         _stateFlow.value = stateFlow.value.copy(loading = true)
+    }
+
+    private fun String.toDayTime(): String {
+        var startIndex = 0
+        var endIndex = indexOf('-')
+        val day = substring(startIndex, endIndex).toInt()
+        startIndex = endIndex + 1
+        endIndex = indexOf('-', startIndex)
+        val hours = substring(startIndex, endIndex).toInt()
+        startIndex = endIndex + 1
+        val minutes = substring(startIndex).toInt()
+        val calendar = GregorianCalendar()
+        calendar.set(GregorianCalendar.DAY_OF_WEEK, day)
+        calendar.set(GregorianCalendar.HOUR, hours)
+        calendar.set(GregorianCalendar.MINUTE, minutes)
+        return DateFormat.format("EEEE, hh:mm", calendar.time).toString()
     }
 
     internal data class ThermostatSate(
@@ -111,10 +157,16 @@ internal class ThermostatViewModel(
         val title: String = "",
         val currentTemperature: Float = 0f,
         val currentlyOn: Boolean = false,
+        val lastTimeUpdated: String = "",
         val poweredOn: Boolean = false,
-        val availableModes: ImmutableList<Mode> = Mode.entries.toPersistentList(),
-        val selectedMode: Mode = Mode.entries.first(),
-        val manualTemperature: Int = MIN_TEMPERATURE,
+        val availableModes: ImmutableList<Mode> = Mode.entries.toImmutableList(),
+        val selectedMode: Mode = Mode.values().first(),
+        val manualTemperature: Int = 19,
+        val dayTemperature: Int = 19,
+        val nightTemperature: Int = 16,
+        val automaticTemperatureDay: Int = 19,
+        val automaticTemperatureNight: Int = 16,
+        val automaticTemperatures: ImmutableList<ImmutableList<Boolean>> = persistentListOf(),
     )
 
     companion object {
@@ -124,5 +176,3 @@ internal class ThermostatViewModel(
         private const val MAX_TEMPERATURE = 25
     }
 }
-
-

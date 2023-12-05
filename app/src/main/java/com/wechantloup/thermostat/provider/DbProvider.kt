@@ -23,7 +23,7 @@ object DbProvider {
 
     private const val URL = "https://thermostat-4211f-default-rtdb.europe-west1.firebasedatabase.app/"
 
-    private const val STATUS_CHILD = "statuses"
+    private const val THERMOSTAT_CHILD = "thermostats"
     private const val USER_CHILD = "users"
     private const val COMMAND_CHILD = "commands"
     private const val DEVICE_CHILD = "devices"
@@ -31,7 +31,7 @@ object DbProvider {
 
     private val databaseRef = Firebase.database(URL).reference
 
-    val statusRef = databaseRef.child(STATUS_CHILD)
+    val thermostatRef = databaseRef.child(THERMOSTAT_CHILD)
     val userRef = databaseRef.child(USER_CHILD)
     val commandRef = databaseRef.child(COMMAND_CHILD)
     val deviceRef = databaseRef.child(DEVICE_CHILD)

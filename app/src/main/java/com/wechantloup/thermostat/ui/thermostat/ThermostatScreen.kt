@@ -1,8 +1,8 @@
 package com.wechantloup.thermostat.ui.thermostat
 
+import android.text.format.DateFormat
 import android.util.Log
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,18 +35,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wechantloup.thermostat.R
 import com.wechantloup.thermostat.model.Mode
-import com.wechantloup.thermostat.ui.compose.DayTime
-import com.wechantloup.thermostat.ui.compose.DayTimeLine
 import com.wechantloup.thermostat.ui.compose.Loader
 import com.wechantloup.thermostat.ui.compose.TopAppBar
 import com.wechantloup.thermostat.ui.theme.Dimens
 import com.wechantloup.thermostat.ui.theme.ThermostatTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import java.util.Date
 
 @Composable
 internal fun ThermostatScreen(
@@ -60,13 +58,18 @@ internal fun ThermostatScreen(
         title = state.title,
         currentTemperature = state.currentTemperature,
         currentlyOn = state.currentlyOn,
+        lastTimeUpdated = state.lastTimeUpdated,
         poweredOn = state.poweredOn,
         availableModes = state.availableModes,
         selectedMode = state.selectedMode,
         manualTemperature = state.manualTemperature,
+        dayTemperature = state.dayTemperature,
+        nightTemperature = state.nightTemperature,
         power = viewModel::power,
         selectMode = viewModel::selectMode,
         setTemperature = viewModel::setTemperature,
+        setDayTemperature = viewModel::setDayTemperature,
+        setNightTemperature = viewModel::setNightTemperature,
         goToSettings = goToSettings,
     )
 }
@@ -77,13 +80,18 @@ private fun ThermostatScreen(
     title: String,
     currentTemperature: Float,
     currentlyOn: Boolean,
+    lastTimeUpdated: String,
     poweredOn: Boolean,
     availableModes: ImmutableList<Mode>,
     selectedMode: Mode,
     manualTemperature: Int,
+    dayTemperature: Int,
+    nightTemperature: Int,
     power: (Boolean) -> Unit,
     selectMode: (Mode) -> Unit,
     setTemperature: (Int) -> Unit,
+    setDayTemperature: (Int) -> Unit,
+    setNightTemperature: (Int) -> Unit,
     goToSettings: () -> Unit,
 ) {
     Log.d("TEST", "Recompose ThermostatScreen")
@@ -98,13 +106,18 @@ private fun ThermostatScreen(
         ThermostatContent(
             currentTemperature = currentTemperature,
             currentlyOn = currentlyOn,
+            lastTimeUpdated = lastTimeUpdated,
             poweredOn = poweredOn,
             availableModes = availableModes,
             selectedMode = selectedMode,
             manualTemperature = manualTemperature,
+            dayTemperature = dayTemperature,
+            nightTemperature = nightTemperature,
             power = power,
             selectMode = selectMode,
             setTemperature = setTemperature,
+            setDayTemperature = setDayTemperature,
+            setNightTemperature = setNightTemperature,
             modifier = Modifier
                 .padding(it)
                 .fillMaxSize(),
@@ -138,30 +151,44 @@ private fun Actions(
 private fun ThermostatContent(
     currentTemperature: Float,
     currentlyOn: Boolean,
+    lastTimeUpdated: String,
     poweredOn: Boolean,
     availableModes: ImmutableList<Mode>,
     selectedMode: Mode,
     manualTemperature: Int,
+    dayTemperature: Int,
+    nightTemperature: Int,
     power: (Boolean) -> Unit,
     selectMode: (Mode) -> Unit,
     setTemperature: (Int) -> Unit,
+    setDayTemperature: (Int) -> Unit,
+    setNightTemperature: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
         modifier = modifier.padding(Dimens.spacing2w),
     ) {
-        StateModule(currentTemperature, currentlyOn, Modifier.fillMaxWidth())
+        StateModule(
+            currentTemperature,
+            currentlyOn,
+            lastTimeUpdated,
+            Modifier.fillMaxWidth(),
+        )
         PowerModule(poweredOn, power, Modifier.fillMaxWidth())
 
         if (!poweredOn) return@Column
 
         ModeModule(availableModes, selectedMode, selectMode, Modifier.fillMaxWidth())
         SetModule(
-            selectedMode,
-            manualTemperature,
-            setTemperature,
-            Modifier.fillMaxWidth(),
+            mode = selectedMode,
+            manualTemperature = manualTemperature,
+            dayTemperature = dayTemperature,
+            nightTemperature = nightTemperature,
+            setTemperature = setTemperature,
+            setDayTemperature = setDayTemperature,
+            setNightTemperature = setNightTemperature,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -170,14 +197,43 @@ private fun ThermostatContent(
 private fun StateModule(
     currentTemperature: Float,
     currentlyOn: Boolean,
+    lastUpdated: String,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
-        modifier = modifier.height(IntrinsicSize.Min),
+    Column(
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
+        modifier = modifier,
     ) {
-        TemperatureModule(currentTemperature, Modifier.weight(1f))
-        OnModule(currentlyOn)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
+            modifier = Modifier.height(IntrinsicSize.Min),
+        ) {
+            TemperatureModule(currentTemperature, Modifier.weight(1f))
+            OnModule(currentlyOn)
+        }
+        TimeModule(
+            lastUpdated = lastUpdated,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun TimeModule(
+    lastUpdated: String,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(Dimens.spacing2w)
+        ) {
+            Text(
+                text = stringResource(id = R.string.last_time_updated_label, lastUpdated),
+            )
+        }
     }
 }
 
@@ -224,7 +280,7 @@ private fun TemperatureModule(
 private fun PowerModule(
     poweredOn: Boolean,
     power: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier
@@ -253,7 +309,7 @@ private fun ModeModule(
     availableModes: ImmutableList<Mode>,
     selectedMode: Mode,
     selectMode: (Mode) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier.width(IntrinsicSize.Min)
@@ -292,7 +348,11 @@ private fun getModeLabelRes(mode: Mode): Int = when (mode) {
 private fun SetModule(
     mode: Mode,
     manualTemperature: Int,
+    dayTemperature: Int,
+    nightTemperature: Int,
     setTemperature: (Int) -> Unit,
+    setDayTemperature: (Int) -> Unit,
+    setNightTemperature: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (mode) {
@@ -302,6 +362,10 @@ private fun SetModule(
             modifier = modifier,
         )
         Mode.AUTO -> AutomaticModule(
+            dayTemperature = dayTemperature,
+            nightTemperature = nightTemperature,
+            setDayTemperature = setDayTemperature,
+            setNightTemperature = setNightTemperature,
             modifier = modifier,
         )
     }
@@ -320,27 +384,40 @@ private fun ManualModule(
             contentAlignment = Alignment.Center,
             modifier = Modifier.padding(Dimens.spacing2w),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            TemperatureSetter(
+                temperature = manualTemperature,
+                setTemperature = setTemperature,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TemperatureSetter(
+    temperature: Int,
+    setTemperature: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier,
+    ) {
+        Text(
+            text = stringResource(id = R.string.manual_temperature_label, temperature),
+            fontSize = 64.sp,
+        )
+        Column(
+            modifier = Modifier.padding(start = Dimens.spacing2w),
+        ) {
+            Button(
+                onClick = { setTemperature(temperature + 1) }
             ) {
-                Text(
-                    text = stringResource(id = R.string.manual_temperature_label, manualTemperature),
-                    fontSize = 64.sp,
-                )
-                Column(
-                    modifier = Modifier.padding(start = Dimens.spacing2w),
-                ) {
-                    Button(
-                        onClick = { setTemperature(manualTemperature + 1) }
-                    ) {
-                        Text("+")
-                    }
-                    Button(
-                        onClick = { setTemperature(manualTemperature - 1) }
-                    ) {
-                        Text("-")
-                    }
-                }
+                Text("+")
+            }
+            Button(
+                onClick = { setTemperature(temperature - 1) }
+            ) {
+                Text("-")
             }
         }
     }
@@ -348,61 +425,55 @@ private fun ManualModule(
 
 @Composable
 private fun AutomaticModule(
+    dayTemperature: Int,
+    nightTemperature: Int,
+    setDayTemperature: (Int) -> Unit,
+    setNightTemperature: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val dayTime = DayTime(
-        listOf(
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.NIGHT,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-            DayTime.Mode.DAY,
-        )
-    )
-        Column(
-            modifier = modifier,
+    Column(
+        modifier = modifier,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            DayTimeLine(
-                dayTime = dayTime,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .background(MaterialTheme.colorScheme.background)
+            TemperatureSetter(
+                temperature = dayTemperature,
+                setTemperature = setDayTemperature,
+                modifier = Modifier.weight(1f)
             )
-            DayTimeLine(
-                dayTime = dayTime,
-                modifier = Modifier
-                    .width(200.dp)
-                    .height(50.dp)
-                    .background(MaterialTheme.colorScheme.background)
+            TemperatureSetter(
+                temperature = nightTemperature,
+                setTemperature = setNightTemperature,
+                modifier = Modifier.weight(1f)
             )
         }
+//        DayTimeLine(
+//            dayTime = dayTime,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(200.dp)
+//                .background(MaterialTheme.colorScheme.background)
+//        )
+//        DayTimeLine(
+//            dayTime = dayTime,
+//            modifier = Modifier
+//                .width(200.dp)
+//                .height(50.dp)
+//                .background(MaterialTheme.colorScheme.background)
+//        )
+    }
 }
 
 @Preview
 @Composable
 private fun StateModuleOnPreview() {
     ThermostatTheme {
-        StateModule(currentTemperature = 19f, currentlyOn = true)
+        StateModule(
+            currentTemperature = 19f,
+            currentlyOn = true,
+            lastUpdated = "Tuesday, 08:30",
+        )
     }
 }
 
@@ -410,7 +481,21 @@ private fun StateModuleOnPreview() {
 @Composable
 private fun StateModuleOffPreview() {
     ThermostatTheme {
-        StateModule(currentTemperature = 19f, currentlyOn = false)
+        StateModule(
+            currentTemperature = 19f,
+            currentlyOn = false,
+            lastUpdated = "Tuesday, 08:30",
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TimeModulePreview() {
+    ThermostatTheme {
+        TimeModule(
+            lastUpdated = "Tuesday, 08:30",
+        )
     }
 }
 
