@@ -8,6 +8,7 @@ import ds18x20
 import ufirebase as firebase
 import ujson
 import urequests
+import gc
 
 uniqueId = ""
 
@@ -243,6 +244,10 @@ def run():
     while not wlan.isconnected():
         connect()
     while wlan.isconnected():
+        print()
+        gc.collect()
+        print(gc.mem_free())
+        print()
         currentTemperature = getTemperature()
         print(f'Sensor temperature: {currentTemperature}')
         saveTemperature(currentTemperature)
