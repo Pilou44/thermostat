@@ -146,7 +146,7 @@ internal class ThermostatViewModel(
         startIndex = endIndex + 1
         val minutes = substring(startIndex).toInt()
         val calendar = GregorianCalendar()
-        calendar.set(GregorianCalendar.DAY_OF_WEEK, (day + 1) % 7)
+        calendar.set(GregorianCalendar.DAY_OF_WEEK, ((day + 1) % 7) + 1)
         calendar.set(GregorianCalendar.HOUR_OF_DAY, hours)
         calendar.set(GregorianCalendar.MINUTE, minutes)
         return DateFormat.format("EEEE, HH:mm", calendar.time).toString()
