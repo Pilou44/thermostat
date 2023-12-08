@@ -4,7 +4,7 @@ from picozero import pico_temp_sensor, pico_led
 import machine
 import onewire
 import ds18x20
-import dht
+# import dht
 import ufirebase as firebase
 import ujson
 import urequests
@@ -16,10 +16,11 @@ wlan = network.WLAN(network.STA_IF)
 ssid = 'WIFI_BN'
 password = 'wF4y4H2Urr3M'
 
-dht11_pin = machine.Pin(27)
+# dht11_pin = machine.Pin(27)
 ds18b20_pin = machine.Pin(28)
+ds18b20_connected = False
 
-dht11_sensor = dht.DHT11(dht11_pin)
+# dht11_sensor = dht.DHT11(dht11_pin)
 
 ds18b20_sensor = ds18x20.DS18X20(onewire.OneWire(ds18b20_pin))
 ds18b20_rom = 0
@@ -50,16 +51,16 @@ def getDay(val):
         return 'sunday'
 
 def initTemperature():
-    global dht11_connected
+#     global dht11_connected
     global ds18b20_connected
     
-    try:
-        dht11_sensor.measure()
-        print("DHT11 connected")
-        dht11_connected = True
-    except OSError as e:
-        print("DHT11 not connected")
-        dht11_connected = False
+#     try:
+#         dht11_sensor.measure()
+#         print("DHT11 connected")
+#         dht11_connected = True
+#     except OSError as e:
+#         print("DHT11 not connected")
+#         dht11_connected = False
     
     global ds18b20_rom
     roms = ds18b20_sensor.scan()
@@ -74,7 +75,7 @@ def initTemperature():
     return ds18b20_connected or dht11_connected
 
 def getTemperature():
-    global dht11_connected
+#     global dht11_connected
     global ds18b20_connected
     
 #     ds18b20_sensor.convert_temp()
@@ -91,12 +92,12 @@ def getTemperature():
         ds18b20_sensor.convert_temp()
         time.sleep_ms(750)
         return ds18b20_sensor.read_temp(ds18b20_rom)
-    elif dht11_connected:
-        dht11_sensor.measure()
-        # Récupère les mesures du capteur
-        temperature = dht11_sensor.temperature()
-        print(f"Humidite    : {dht11_sensor.humidity():.1f}")
-        return temperature
+#     elif dht11_connected:
+#         dht11_sensor.measure()
+#         # Récupère les mesures du capteur
+#         temperature = dht11_sensor.temperature()
+#         print(f"Humidite    : {dht11_sensor.humidity():.1f}")
+#         return temperature
     else:
         return NaN
 
