@@ -1,6 +1,5 @@
 package com.wechantloup.thermostat.ui.thermostat
 
-import android.text.format.DateFormat
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
@@ -30,7 +29,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,7 +42,7 @@ import com.wechantloup.thermostat.ui.theme.Dimens
 import com.wechantloup.thermostat.ui.theme.ThermostatTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import java.util.Date
+import kotlin.math.roundToInt
 
 @Composable
 internal fun ThermostatScreen(
@@ -57,6 +55,7 @@ internal fun ThermostatScreen(
         isLoading = state.loading,
         title = state.title,
         currentTemperature = state.currentTemperature,
+        currentHumidity = state.currentHumidity,
         currentlyOn = state.currentlyOn,
         lastTimeUpdated = state.lastTimeUpdated,
         poweredOn = state.poweredOn,
@@ -79,6 +78,7 @@ private fun ThermostatScreen(
     isLoading: Boolean,
     title: String,
     currentTemperature: Float,
+    currentHumidity: Float,
     currentlyOn: Boolean,
     lastTimeUpdated: String,
     poweredOn: Boolean,
@@ -105,6 +105,7 @@ private fun ThermostatScreen(
     ) {
         ThermostatContent(
             currentTemperature = currentTemperature,
+            currentHumidity = currentHumidity,
             currentlyOn = currentlyOn,
             lastTimeUpdated = lastTimeUpdated,
             poweredOn = poweredOn,
@@ -150,6 +151,7 @@ private fun Actions(
 @Composable
 private fun ThermostatContent(
     currentTemperature: Float,
+    currentHumidity: Float,
     currentlyOn: Boolean,
     lastTimeUpdated: String,
     poweredOn: Boolean,
@@ -171,6 +173,7 @@ private fun ThermostatContent(
     ) {
         StateModule(
             currentTemperature,
+            currentHumidity,
             currentlyOn,
             lastTimeUpdated,
             Modifier.fillMaxWidth(),
@@ -196,43 +199,30 @@ private fun ThermostatContent(
 @Composable
 private fun StateModule(
     currentTemperature: Float,
+    currentHumidity: Float,
     currentlyOn: Boolean,
-    lastUpdated: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
-        modifier = modifier,
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
-            modifier = Modifier.height(IntrinsicSize.Min),
-        ) {
-            TemperatureModule(currentTemperature, Modifier.weight(1f))
-            OnModule(currentlyOn)
-        }
-        TimeModule(
-            lastUpdated = lastUpdated,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@Composable
-private fun TimeModule(
     lastUpdated: String,
     modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(Dimens.spacing2w)
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
+            modifier = Modifier.padding(Dimens.spacing2w),
         ) {
             Text(
                 text = stringResource(id = R.string.last_time_updated_label, lastUpdated),
+                modifier = Modifier.fillMaxWidth(),
             )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
+                modifier = Modifier.height(IntrinsicSize.Min),
+            ) {
+                TemperatureModule(currentTemperature, Modifier.weight(1f))
+                HumidityModule(currentHumidity, Modifier.weight(1f))
+                OnModule(currentlyOn)
+            }
         }
     }
 }
@@ -242,19 +232,12 @@ private fun OnModule(
     currentlyOn: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Card(modifier = modifier) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.aspectRatio(1f),
-        ) {
-            val res = if (currentlyOn) R.drawable.ic_flame_24 else R.drawable.ic_stop_24
-            Icon(
-                painter = painterResource(id = res),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(0.8f),
-            )
-        }
-    }
+    val res = if (currentlyOn) R.drawable.ic_flame_24 else R.drawable.ic_stop_24
+    Icon(
+        imageVector = ImageVector.vectorResource(id = res),
+        contentDescription = null,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -262,17 +245,37 @@ private fun TemperatureModule(
     temperature: Float,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(Dimens.spacing2w)
-        ) {
-            Text(
-                text = stringResource(id = R.string.current_temperature_label, temperature),
-            )
-        }
+        Icon(
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_thermostat_24),
+            contentDescription = stringResource(id = R.string.current_temperature_label),
+        )
+        Text(
+            text = stringResource(id = R.string.float_temperature_label, temperature),
+        )
+    }
+}
+
+@Composable
+private fun HumidityModule(
+    humidity: Float,
+    modifier: Modifier = Modifier,
+) {
+    if (humidity.isNaN()) return
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier,
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_water_drop_24),
+            contentDescription = stringResource(id = R.string.current_humidity_label),
+        )
+        Text(
+            text = stringResource(id = R.string.humidity_label, humidity.roundToInt()),
+        )
     }
 }
 
@@ -403,7 +406,7 @@ private fun TemperatureSetter(
         modifier = modifier,
     ) {
         Text(
-            text = stringResource(id = R.string.manual_temperature_label, temperature),
+            text = stringResource(id = R.string.int_temperature_label, temperature),
             fontSize = 64.sp,
         )
         Column(
@@ -471,6 +474,7 @@ private fun StateModuleOnPreview() {
     ThermostatTheme {
         StateModule(
             currentTemperature = 19f,
+            currentHumidity = 60f,
             currentlyOn = true,
             lastUpdated = "Tuesday, 08:30",
         )
@@ -483,27 +487,10 @@ private fun StateModuleOffPreview() {
     ThermostatTheme {
         StateModule(
             currentTemperature = 19f,
+            currentHumidity = 60f,
             currentlyOn = false,
             lastUpdated = "Tuesday, 08:30",
         )
-    }
-}
-
-@Preview
-@Composable
-private fun TimeModulePreview() {
-    ThermostatTheme {
-        TimeModule(
-            lastUpdated = "Tuesday, 08:30",
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun TemperatureModulePreview() {
-    ThermostatTheme {
-        TemperatureModule(19f)
     }
 }
 

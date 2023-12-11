@@ -64,6 +64,7 @@ internal class ThermostatViewModel(
                 .collect { thermostat ->
                     _stateFlow.value = stateFlow.value.copy(
                         currentTemperature = thermostat.temperature,
+                        currentHumidity = thermostat.humidity,
                         currentlyOn = thermostat.on,
                         lastTimeUpdated = thermostat.time.toDayTime()
                     )
@@ -156,6 +157,7 @@ internal class ThermostatViewModel(
         val loading: Boolean = true,
         val title: String = "",
         val currentTemperature: Float = 0f,
+        val currentHumidity: Float = 0f,
         val currentlyOn: Boolean = false,
         val lastTimeUpdated: String = "",
         val poweredOn: Boolean = false,

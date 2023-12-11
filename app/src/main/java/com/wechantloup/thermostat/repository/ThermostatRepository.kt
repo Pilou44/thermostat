@@ -26,16 +26,17 @@ object ThermostatRepository {
     }
 
     private fun Thermostat.toDbThermostat(): Pair<String, DbThermostat> {
-        val dbThermostat = DbThermostat(temperature, on, time)
+        val dbThermostat = DbThermostat(temperature, humidity, on, time)
         return deviceId to dbThermostat
     }
 
     private fun DbThermostat.toThermostat(id: String): Thermostat {
-        return Thermostat(id, temperature, on, time)
+        return Thermostat(id, temperature, humidity, on, time)
     }
 
     private data class DbThermostat(
         val temperature: Float = 0f,
+        val humidity: Float = Float.NaN,
         val on: Boolean = false,
         val time: String = "",
     )

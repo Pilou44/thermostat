@@ -77,32 +77,23 @@ def initTemperature():
     
     return ds18b20_connected or dht11_connected
 
-def getTemperature():
-#     global dht11_connected
-    global ds18b20_connected
+def readTemperature():
+    if dht11_connected:
+        dht11_sensor.measure()
+        temperature = dht11_sensor.temperature()
+        humidity =  dht11_sensor.humidity()
+    elif ds18b20_connected:
+        ds18b20_sensor.convert_temp()
+        time.sleep_ms(750)
+        temperature = ds18b20_sensor.read_temp(ds18b20_rom)
+        humidity = float("NaN")
+    else:
+        temperature = float("NaN")
+        humidity = float("NaN")
     
-    ds18b20_sensor.convert_temp()
-    time.sleep_ms(750)
-    temperature = ds18b20_sensor.read_temp(ds18b20_rom)
-    print(f'18b20: {temperature}')
-    dht11_sensor.measure()
-    temperature = dht11_sensor.temperature()
-    print(f'dht11: {temperature}')
-    print(f"Humidite    : {dht11_sensor.humidity():.1f}")
+    saveTemperature(temperature)
+    saveHumidity(humidity)
     return temperature
-    
-#     if ds18b20_connected:
-#         ds18b20_sensor.convert_temp()
-#         time.sleep_ms(750)
-#         return ds18b20_sensor.read_temp(ds18b20_rom)
-# #     elif dht11_connected:
-# #         dht11_sensor.measure()
-# #         # Récupère les mesures du capteur
-# #         temperature = dht11_sensor.temperature()
-# #         print(f"Humidite    : {dht11_sensor.humidity():.1f}")
-# #         return temperature
-#     else:
-#         return NaN
 
 def initFirebase():
     firebase.setURL("https://thermostat-4211f-default-rtdb.europe-west1.firebasedatabase.app/")
@@ -118,6 +109,11 @@ def saveTemperature(temperature):
     print("Save current temperature")
     path = f'thermostats/{uniqueId}/temperature'
     firebase.put(path, temperature, bg=False, id=1)
+
+def saveHumidity(humidity):
+    print("Save current humidity")
+    path = f'thermostats/{uniqueId}/humidity'
+    firebase.put(path, humidity, bg=False, id=1)
 
 def setStatusOn(on):
     print(f"Set status on: {on}")
@@ -250,9 +246,8 @@ def run():
         gc.collect()
         print(gc.mem_free())
         print()
-        currentTemperature = getTemperature()
+        currentTemperature = readTemperature()
         print(f'Sensor temperature: {currentTemperature}')
-        saveTemperature(currentTemperature)
         if isOn():
             neededTemperature = getNeededTemperature()
         else:

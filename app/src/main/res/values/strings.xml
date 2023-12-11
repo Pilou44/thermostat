@@ -3,9 +3,12 @@
     <string name="power_label">Power</string>
     <string name="manual_mode_label">Manual</string>
     <string name="auto_mode_label">Automatic</string>
-    <string name="current_temperature_label">Current temperature: %.1f°C</string>
+    <string name="current_temperature_label">Current temperature</string>
+    <string name="current_humidity_label">Current humidity</string>
+    <string name="float_temperature_label">%.1f°C</string>
+    <string name="humidity_label">%d%%</string>
     <string name="last_time_updated_label">Updated on: %s</string>
-    <string name="manual_temperature_label">%d°C</string>
+    <string name="int_temperature_label">%d°C</string>
     <string name="sign_in_button_label">Sign In</string>
     <string name="sign_out_button_label">Sign Out</string>
     <string name="validate_button_label">Validate</string>
