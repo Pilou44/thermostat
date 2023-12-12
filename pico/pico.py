@@ -86,10 +86,10 @@ def readTemperature():
         ds18b20_sensor.convert_temp()
         time.sleep_ms(750)
         temperature = ds18b20_sensor.read_temp(ds18b20_rom)
-        humidity = float("NaN")
+        humidity = float(-1)
     else:
-        temperature = float("NaN")
-        humidity = float("NaN")
+        temperature = float(-1)
+        humidity = float(-1)
     
     saveTemperature(temperature)
     saveHumidity(humidity)

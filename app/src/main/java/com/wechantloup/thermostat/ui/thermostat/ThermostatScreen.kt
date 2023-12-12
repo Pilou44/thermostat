@@ -264,7 +264,7 @@ private fun HumidityModule(
     humidity: Float,
     modifier: Modifier = Modifier,
 ) {
-    if (humidity.isNaN()) return
+    if (humidity < 0) return
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier,
