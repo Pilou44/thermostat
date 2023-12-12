@@ -43,6 +43,15 @@ object CommandRepository {
         DbProvider.commandRef.child(deviceId).set(command)
     }
 
+    suspend fun setIsDay(deviceId: String, day: Int, hour: Int, isDay: Boolean) {
+        DbProvider.commandRef
+            .child(deviceId)
+            .child("automaticTemperatures")
+            .child(day.toString())
+            .child(hour.toString())
+            .set(isDay)
+    }
+
     fun subscribe(deviceId: String): Flow<Command> {
         val ref = DbProvider.commandRef.child(deviceId)
         return ref.subscribe()

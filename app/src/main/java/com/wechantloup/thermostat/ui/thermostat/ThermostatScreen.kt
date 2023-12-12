@@ -1,6 +1,5 @@
 package com.wechantloup.thermostat.ui.thermostat
 
-import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,12 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -26,6 +26,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,14 +36,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wechantloup.thermostat.R
+import com.wechantloup.thermostat.model.DayTime
 import com.wechantloup.thermostat.model.Mode
+import com.wechantloup.thermostat.ui.compose.DayTimeLine
 import com.wechantloup.thermostat.ui.compose.Loader
 import com.wechantloup.thermostat.ui.compose.TopAppBar
 import com.wechantloup.thermostat.ui.theme.Dimens
 import com.wechantloup.thermostat.ui.theme.ThermostatTheme
+import com.wechantloup.thermostat.utils.toAbbreviatedDayOfWeek
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.math.roundToInt
 
@@ -48,6 +56,7 @@ import kotlin.math.roundToInt
 internal fun ThermostatScreen(
     viewModel: ThermostatViewModel,
     goToSettings: () -> Unit,
+    goToDayTimeSettings: (Int) -> Unit,
 ) {
     val state by viewModel.stateFlow.collectAsState()
 
@@ -62,14 +71,16 @@ internal fun ThermostatScreen(
         availableModes = state.availableModes,
         selectedMode = state.selectedMode,
         manualTemperature = state.manualTemperature,
-        dayTemperature = state.dayTemperature,
-        nightTemperature = state.nightTemperature,
+        dayTemperature = state.automaticTemperatureDay,
+        nightTemperature = state.automaticTemperatureNight,
+        automaticTemperatures = state.automaticTemperatures,
         power = viewModel::power,
         selectMode = viewModel::selectMode,
         setTemperature = viewModel::setTemperature,
         setDayTemperature = viewModel::setDayTemperature,
         setNightTemperature = viewModel::setNightTemperature,
         goToSettings = goToSettings,
+        goToDayTimeSettings= goToDayTimeSettings,
     )
 }
 
@@ -87,14 +98,15 @@ private fun ThermostatScreen(
     manualTemperature: Int,
     dayTemperature: Int,
     nightTemperature: Int,
+    automaticTemperatures: ImmutableList<DayTime>,
     power: (Boolean) -> Unit,
     selectMode: (Mode) -> Unit,
     setTemperature: (Int) -> Unit,
     setDayTemperature: (Int) -> Unit,
     setNightTemperature: (Int) -> Unit,
     goToSettings: () -> Unit,
+    goToDayTimeSettings: (Int) -> Unit,
 ) {
-    Log.d("TEST", "Recompose ThermostatScreen")
     Scaffold(
         topBar = {
             TopAppBar(
@@ -114,11 +126,13 @@ private fun ThermostatScreen(
             manualTemperature = manualTemperature,
             dayTemperature = dayTemperature,
             nightTemperature = nightTemperature,
+            automaticTemperatures = automaticTemperatures,
             power = power,
             selectMode = selectMode,
             setTemperature = setTemperature,
             setDayTemperature = setDayTemperature,
             setNightTemperature = setNightTemperature,
+            goToDayTimeSettings = goToDayTimeSettings,
             modifier = Modifier
                 .padding(it)
                 .fillMaxSize(),
@@ -160,16 +174,20 @@ private fun ThermostatContent(
     manualTemperature: Int,
     dayTemperature: Int,
     nightTemperature: Int,
+    automaticTemperatures: ImmutableList<DayTime>,
     power: (Boolean) -> Unit,
     selectMode: (Mode) -> Unit,
     setTemperature: (Int) -> Unit,
     setDayTemperature: (Int) -> Unit,
     setNightTemperature: (Int) -> Unit,
+    goToDayTimeSettings: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
-        modifier = modifier.padding(Dimens.spacing2w),
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(Dimens.spacing2w),
     ) {
         StateModule(
             currentTemperature,
@@ -188,9 +206,11 @@ private fun ThermostatContent(
             manualTemperature = manualTemperature,
             dayTemperature = dayTemperature,
             nightTemperature = nightTemperature,
+            automaticTemperatures = automaticTemperatures,
             setTemperature = setTemperature,
             setDayTemperature = setDayTemperature,
             setNightTemperature = setNightTemperature,
+            goToDayTimeSettings = goToDayTimeSettings,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -217,7 +237,7 @@ private fun StateModule(
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
-                modifier = Modifier.height(IntrinsicSize.Min),
+                modifier = Modifier,
             ) {
                 TemperatureModule(currentTemperature, Modifier.weight(1f))
                 HumidityModule(currentHumidity, Modifier.weight(1f))
@@ -353,9 +373,11 @@ private fun SetModule(
     manualTemperature: Int,
     dayTemperature: Int,
     nightTemperature: Int,
+    automaticTemperatures: ImmutableList<DayTime>,
     setTemperature: (Int) -> Unit,
     setDayTemperature: (Int) -> Unit,
     setNightTemperature: (Int) -> Unit,
+    goToDayTimeSettings: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (mode) {
@@ -367,8 +389,10 @@ private fun SetModule(
         Mode.AUTO -> AutomaticModule(
             dayTemperature = dayTemperature,
             nightTemperature = nightTemperature,
+            automaticTemperatures = automaticTemperatures,
             setDayTemperature = setDayTemperature,
             setNightTemperature = setNightTemperature,
+            goToDayTimeSettings = goToDayTimeSettings,
             modifier = modifier,
         )
     }
@@ -401,26 +425,39 @@ private fun TemperatureSetter(
     setTemperature: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var fontSize by remember { mutableFloatStateOf(64f) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
         modifier = modifier,
     ) {
         Text(
             text = stringResource(id = R.string.int_temperature_label, temperature),
-            fontSize = 64.sp,
+            fontSize = fontSize.sp,
+            maxLines = 1,
+            onTextLayout = { result ->
+                if (result.hasVisualOverflow) {
+                    fontSize *= 0.9f
+                }
+            },
+            modifier = Modifier.weight(1f, fill = false),
         )
-        Column(
-            modifier = Modifier.padding(start = Dimens.spacing2w),
-        ) {
+        Column {
             Button(
-                onClick = { setTemperature(temperature + 1) }
+                onClick = { setTemperature(temperature + 1) },
             ) {
-                Text("+")
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_add_24),
+                    contentDescription = "+",
+                )
             }
             Button(
                 onClick = { setTemperature(temperature - 1) }
             ) {
-                Text("-")
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_remove_24),
+                    contentDescription = "-",
+                )
             }
         }
     }
@@ -430,41 +467,83 @@ private fun TemperatureSetter(
 private fun AutomaticModule(
     dayTemperature: Int,
     nightTemperature: Int,
+    automaticTemperatures: ImmutableList<DayTime>,
     setDayTemperature: (Int) -> Unit,
     setNightTemperature: (Int) -> Unit,
+    goToDayTimeSettings: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    Card(
+        modifier = modifier
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Dimens.spacing2w),
+            modifier = modifier.padding(Dimens.spacing2w),
+        ) {
+            Row {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_sun_24),
+                    contentDescription = stringResource(id = R.string.day_label),
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_moon_24),
+                    contentDescription = stringResource(id = R.string.night_label),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.spacing4w),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                TemperatureSetter(
+                    temperature = dayTemperature,
+                    setTemperature = setDayTemperature,
+                    modifier = Modifier.weight(1f)
+                )
+                TemperatureSetter(
+                    temperature = nightTemperature,
+                    setTemperature = setNightTemperature,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            automaticTemperatures.forEachIndexed { index, dayTime ->
+                DayTimeLineRow(
+                    day = index,
+                    dayTime = dayTime,
+                    edit = { goToDayTimeSettings(index) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DayTimeLineRow(
+    day: Int,
+    dayTime: DayTime,
+    edit: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            TemperatureSetter(
-                temperature = dayTemperature,
-                setTemperature = setDayTemperature,
-                modifier = Modifier.weight(1f)
-            )
-            TemperatureSetter(
-                temperature = nightTemperature,
-                setTemperature = setNightTemperature,
-                modifier = Modifier.weight(1f)
+        val dayText = day.toAbbreviatedDayOfWeek()
+        Text(text = dayText)
+        DayTimeLine(
+            dayTime = dayTime,
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp)
+        )
+        IconButton(onClick = edit) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.ic_settings_24),
+                contentDescription = stringResource(id = R.string.settings_button_label),
             )
         }
-//        DayTimeLine(
-//            dayTime = dayTime,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(200.dp)
-//                .background(MaterialTheme.colorScheme.background)
-//        )
-//        DayTimeLine(
-//            dayTime = dayTime,
-//            modifier = Modifier
-//                .width(200.dp)
-//                .height(50.dp)
-//                .background(MaterialTheme.colorScheme.background)
-//        )
     }
 }
 
@@ -517,5 +596,48 @@ private fun ModeModulePreview() {
 private fun ManualModulePreview() {
     ThermostatTheme {
         ManualModule(19, {})
+    }
+}
+
+@Preview
+@Composable
+private fun AutomaticModulePreview() {
+    val dayTime = DayTime(
+        persistentListOf(
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.NIGHT,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+            DayTime.Mode.DAY,
+        )
+    )
+    ThermostatTheme {
+        AutomaticModule(
+            dayTemperature = 19,
+            nightTemperature = 16,
+            automaticTemperatures = persistentListOf(dayTime),
+            setDayTemperature = {},
+            setNightTemperature = {},
+            goToDayTimeSettings = {},
+        )
     }
 }

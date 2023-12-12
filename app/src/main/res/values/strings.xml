@@ -30,4 +30,7 @@
     <string name="bad_ip_error_message">Bad IP address</string>
     <string name="used_ip_error_message">Already used IP address</string>
     <string name="unknown_error_message">Unknown error</string>
+    <string name="day_label">Day</string>
+    <string name="night_label">Night</string>
+    <string name="from_time_to_time">From %dh to %dh</string>
 </resources>

@@ -26,17 +26,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.wechantloup.thermostat.model.DayTime
 import com.wechantloup.thermostat.ui.theme.Dimens
 import com.wechantloup.thermostat.ui.theme.ThermostatTheme
-
-data class DayTime(
-    val hours: List<Mode>,
-) {
-
-    enum class Mode {
-        DAY, NIGHT,
-    }
-}
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun DayTimeLine(
@@ -126,7 +119,7 @@ private fun Hour(
 @Composable
 fun DayTimeLinePreview() {
     val dayTime = DayTime(
-        listOf(
+        persistentListOf(
             DayTime.Mode.NIGHT,
             DayTime.Mode.NIGHT,
             DayTime.Mode.NIGHT,

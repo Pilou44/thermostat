@@ -16,18 +16,22 @@ import com.wechantloup.thermostat.ui.roomselection.RoomSelectionScreen
 import com.wechantloup.thermostat.ui.roomselection.RoomSelectionViewModel
 import com.wechantloup.thermostat.ui.settings.SettingsScreen
 import com.wechantloup.thermostat.ui.settings.SettingsViewModel
+import com.wechantloup.thermostat.ui.thermostat.DaySettingsScreen
 import com.wechantloup.thermostat.ui.thermostat.ThermostatScreen
 import com.wechantloup.thermostat.ui.thermostat.ThermostatViewModel
 
 internal const val ARG_ROOM_ID = "room_id"
+internal const val ARG_DAY = "day"
 
 // Screens
 private const val AUTHENTICATION_SCREEN = "authentication_screen"
 private const val ROOM_SELECTION_SCREEN = "room_selection_screen"
 private const val THERMOSTAT_COMMAND_SCREEN = "thermostat_command_screen"
-internal const val THERMOSTAT_COMMAND_SCREEN_WITH_ARGS = "$THERMOSTAT_COMMAND_SCREEN/{$ARG_ROOM_ID}"
+private const val THERMOSTAT_COMMAND_SCREEN_WITH_ARGS = "$THERMOSTAT_COMMAND_SCREEN/{$ARG_ROOM_ID}"
 private const val THERMOSTAT_SETTINGS_SCREEN = "thermostat_settings_screen"
-internal const val THERMOSTAT_SETTINGS_SCREEN_WITH_ARGS = "$THERMOSTAT_SETTINGS_SCREEN/{$ARG_ROOM_ID}"
+private const val THERMOSTAT_SETTINGS_SCREEN_WITH_ARGS = "$THERMOSTAT_SETTINGS_SCREEN/{$ARG_ROOM_ID}"
+private const val THERMOSTAT_DAY_SETTINGS_SCREEN = "thermostat_day_settings_screen"
+private const val THERMOSTAT_DAY_SETTINGS_SCREEN_WITH_ARGS = "$THERMOSTAT_DAY_SETTINGS_SCREEN/{$ARG_DAY}"
 
 @Composable
 internal fun NavigationHost(
@@ -100,6 +104,7 @@ internal fun NavigationHost(
             ThermostatScreen(
                 viewModel = thermostatViewModel,
                 goToSettings = { navController.navigate("$THERMOSTAT_SETTINGS_SCREEN/$roomId") },
+                goToDayTimeSettings = { day -> navController.navigate("$THERMOSTAT_DAY_SETTINGS_SCREEN/$day")  }
             )
         }
 
@@ -117,6 +122,19 @@ internal fun NavigationHost(
                     thermostatViewModel.setRoomId(roomId)
                     navController.popBackStack()
                 },
+            )
+        }
+
+        composable(
+            THERMOSTAT_DAY_SETTINGS_SCREEN_WITH_ARGS,
+            arguments = listOf(
+                navArgument(ARG_DAY) { type = NavType.IntType },
+            ),
+        ) {
+            val day = requireNotNull(it.arguments?.getInt(ARG_DAY))
+            DaySettingsScreen(
+                day = day,
+                viewModel = thermostatViewModel,
             )
         }
     }

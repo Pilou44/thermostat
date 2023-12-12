@@ -5,6 +5,7 @@ import android.text.format.DateFormat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.wechantloup.thermostat.model.Command
+import com.wechantloup.thermostat.model.DayTime
 import com.wechantloup.thermostat.model.Device
 import com.wechantloup.thermostat.model.Mode
 import com.wechantloup.thermostat.repository.CommandRepository
@@ -83,7 +84,8 @@ internal class ThermostatViewModel(
                         automaticTemperatureNight = command.automaticTemperatureNight,
                         automaticTemperatures = command.automaticTemperatures
                             .map {
-                                it.toImmutableList()
+                                val modes = it.map { isDay -> if (isDay) DayTime.Mode.DAY else DayTime.Mode.NIGHT }
+                                DayTime(modes.toImmutableList())
                             }.toImmutableList(),
                     )
                 }
@@ -153,6 +155,14 @@ internal class ThermostatViewModel(
         return DateFormat.format("EEEE, HH:mm", calendar.time).toString()
     }
 
+    fun setDay(day: Int, hour: Int, isDay: Boolean) {
+        val roomId = roomId ?: return
+        showLoader()
+        viewModelScope.launch {
+            CommandRepository.setIsDay(roomId, day, hour, isDay)
+        }
+    }
+
     internal data class ThermostatSate(
         val loading: Boolean = true,
         val title: String = "",
@@ -164,11 +174,9 @@ internal class ThermostatViewModel(
         val availableModes: ImmutableList<Mode> = Mode.entries.toImmutableList(),
         val selectedMode: Mode = Mode.values().first(),
         val manualTemperature: Int = 19,
-        val dayTemperature: Int = 19,
-        val nightTemperature: Int = 16,
         val automaticTemperatureDay: Int = 19,
         val automaticTemperatureNight: Int = 16,
-        val automaticTemperatures: ImmutableList<ImmutableList<Boolean>> = persistentListOf(),
+        val automaticTemperatures: ImmutableList<DayTime> = persistentListOf(),
     )
 
     companion object {
