@@ -265,8 +265,11 @@ def run():
         time.sleep(1)
     run()
 
-try:
-    if init():
-        run()
-except KeyboardInterrupt:
-    machine.reset()
+if init():
+    while True:
+        try:
+            run()
+        except KeyboardInterrupt:
+            machine.reset()
+        except:
+            pass
