@@ -19,6 +19,8 @@ password = 'wF4y4H2Urr3M'
 
 dht11_pin = machine.Pin(27)
 ds18b20_pin = machine.Pin(28)
+led_R_pin = machine.Pin(26, mode=machine.Pin.OUT, value=1)
+led_G_pin = machine.Pin(22, mode=machine.Pin.OUT, value=1)
 
 ds18b20_connected = False
 dht11_connected = False
@@ -137,6 +139,7 @@ def isOn():
     return firebase.readValue("VAR1")
 
 def init():
+    led_R_pin.low()
     global uniqueId
     uniqueId = getId()
     print(f'Unique id: {uniqueId}')
@@ -146,6 +149,7 @@ def init():
         return False
     wlan.active(True)
     initFirebase()
+    led_G_pin.low()
     return True
 
 def getMode():
@@ -240,8 +244,10 @@ def turnOn(on):
 
 def run():
     while not wlan.isconnected():
+        led_R_pin.low()
         connect()
     while wlan.isconnected():
+        led_R_pin.high()
         print()
         gc.collect()
         print(gc.mem_free())
