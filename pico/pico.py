@@ -1,5 +1,8 @@
 import network
+import socket
 import time
+import time
+import struct
 from picozero import pico_temp_sensor, pico_led
 import machine
 import onewire
@@ -29,6 +32,45 @@ dht11_sensor = dht.DHT11(dht11_pin)
 
 ds18b20_sensor = ds18x20.DS18X20(onewire.OneWire(ds18b20_pin))
 ds18b20_rom = 0
+
+NTP_DELTA = 2208988800
+host = "fr.pool.ntp.org"
+zone = "Europe/Paris"
+key = "WX0HCD6C4R8W"
+
+def get_time_offset():
+    print(f'get_time_offset')
+    try:
+        response = urequests.get(f"http://api.timezonedb.com/v2.1/get-time-zone?key={key}&format=json&by=zone&zone={zone}")
+        parsed = ujson.loads(response.text)
+        response.close()
+        offset = parsed['gmtOffset']
+        print(f'Time offset in s: {offset}')
+        return offset
+    except OSError:
+        print('Connection error')
+        return 0
+
+def set_time():
+    global hour
+    offset = get_time_offset()
+    NTP_QUERY = bytearray(48)
+    NTP_QUERY[0] = 0x1B
+    addr = socket.getaddrinfo(host, 123)[0][-1]
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.settimeout(1)
+        res = s.sendto(NTP_QUERY, addr)
+        msg = s.recv(48)
+    finally:
+        s.close()
+    val = struct.unpack("!I", msg[40:44])[0]
+    t = val - NTP_DELTA + offset
+    tm = time.gmtime(t)
+    print(f'set_time {tm}')
+    machine.RTC().datetime((tm[0], tm[1], tm[2], tm[6] + 1, tm[3], tm[4], tm[5], 0))
+    currentTime = time.localtime()
+    hour = currentTime[3]
 
 def connect():
     wlan.connect(ssid, password)
@@ -246,12 +288,9 @@ def run():
     while not wlan.isconnected():
         led_R_pin.low()
         connect()
+    set_time()
     while wlan.isconnected():
         led_R_pin.high()
-        print()
-        gc.collect()
-        print(gc.mem_free())
-        print()
         currentTemperature = readTemperature()
         print(f'Sensor temperature: {currentTemperature}')
         if isOn():
@@ -268,6 +307,8 @@ def run():
         saveTime()
         coreTemperature = pico_temp_sensor.temp
         print(f'Core temperature is {coreTemperature}')
+        gc.collect()
+        gc.mem_free()
         time.sleep(1)
     run()
 
