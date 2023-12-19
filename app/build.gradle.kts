@@ -22,11 +22,23 @@ android {
     }
 
     signingConfigs {
-        getByName("debug") {
+        create("debugKey") {
             storeFile = file("../keys/keys.jks")
             storePassword = "Br@ngwin"
             keyAlias = "debug"
             keyPassword = "Android"
+        }
+        create("releaseKey") {
+            storeFile = file("../keys/release.jks")
+            storePassword = "release"
+            keyAlias = "release"
+            keyPassword = "release"
+        }
+        create("uploadKey") {
+            storeFile = file("../keys/keys.jks")
+            storePassword = "Br@ngwin"
+            keyAlias = "upload"
+            keyPassword = "AndroidRelease"
         }
     }
 
@@ -34,12 +46,19 @@ android {
         debug{
             isDebuggable = true
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debugKey")
+            applicationIdSuffix = ".debug"
         }
         release {
+            isDebuggable = true
             isMinifyEnabled = false
+//            postprocessing {
+//                isRemoveUnusedCode = true
+//                isObfuscate = false
+//                isOptimizeCode = true
+//            }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("releaseKey")
         }
     }
     compileOptions {

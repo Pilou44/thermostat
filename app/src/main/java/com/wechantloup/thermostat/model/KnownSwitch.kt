@@ -1,8 +1,10 @@
 package com.wechantloup.thermostat.model
 
 import android.content.Context
+import androidx.annotation.Keep
 import com.wechantloup.thermostat.R
 
+@Keep
 data class KnownSwitch(
     val switch: Switch,
     val usedBy: Device?,

@@ -180,7 +180,7 @@ internal class ThermostatViewModel(
     )
 
     companion object {
-        const val TAG = "ThermostatViewModel"
+        private const val TAG = "ThermostatViewModel"
 
         private const val MIN_TEMPERATURE = 5
         private const val MAX_TEMPERATURE = 25

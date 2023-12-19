@@ -1,5 +1,8 @@
 package com.wechantloup.thermostat.model
 
+import androidx.annotation.Keep
+
+@Keep
 data class Command(
     var powerOn: Boolean = false,
     var mode: Mode = Mode.MANUAL,

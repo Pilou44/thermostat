@@ -51,6 +51,6 @@ internal class AuthenticationViewModel(
     )
 
     companion object {
-        const val TAG = "AuthenticationViewModel"
+        private const val TAG = "AuthenticationViewModel"
     }
 }

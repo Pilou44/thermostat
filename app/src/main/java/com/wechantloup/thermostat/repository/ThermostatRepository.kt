@@ -1,5 +1,6 @@
 package com.wechantloup.thermostat.repository
 
+import androidx.annotation.Keep
 import com.wechantloup.thermostat.model.Thermostat
 import com.wechantloup.thermostat.provider.DbProvider
 import com.wechantloup.thermostat.provider.DbProvider.getAll
@@ -34,6 +35,7 @@ object ThermostatRepository {
         return Thermostat(id, temperature, humidity, on, time)
     }
 
+    @Keep
     private data class DbThermostat(
         val temperature: Float = 0f,
         val humidity: Float = Float.NaN,

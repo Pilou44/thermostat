@@ -1,5 +1,6 @@
 package com.wechantloup.thermostat.repository
 
+import androidx.annotation.Keep
 import com.wechantloup.thermostat.provider.DbProvider
 import com.wechantloup.thermostat.provider.DbProvider.getAll
 import com.wechantloup.thermostat.provider.DbProvider.remove
@@ -63,6 +64,7 @@ object SwitchRepository {
         return Switch(address, type, pairedDeviceId)
     }
 
+    @Keep
     private data class DbSwitch(
         val type: SwitchType = SwitchType.values().first(),
         val pairedDeviceId: String? = null,

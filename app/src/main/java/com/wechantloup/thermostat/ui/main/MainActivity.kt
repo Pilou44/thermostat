@@ -27,8 +27,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private val authenticationViewModel by viewModels<AuthenticationViewModel>()
-    private val roomSelectionViewModel by viewModels<RoomSelectionViewModel>()
-    private val thermostatViewModel by viewModels<ThermostatViewModel>()
 
     private val navController by lazy {
         NavHostController(this).apply {

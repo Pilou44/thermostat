@@ -1,8 +1,10 @@
 package com.wechantloup.thermostat.model
 
+import androidx.annotation.Keep
 import com.wechantloup.thermostat.repository.DeviceRepository
 import com.wechantloup.thermostat.repository.ThermostatRepository
 
+@Keep
 data class Device(
     val id: String,
     val name: String,

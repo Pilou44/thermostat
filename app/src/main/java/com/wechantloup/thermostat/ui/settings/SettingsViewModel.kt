@@ -190,6 +190,6 @@ internal class SettingsViewModel(
     )
 
     companion object {
-        const val TAG = "SettingsViewModel"
+        private const val TAG = "SettingsViewModel"
     }
 }

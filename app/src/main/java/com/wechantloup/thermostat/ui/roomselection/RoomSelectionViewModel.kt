@@ -33,6 +33,6 @@ internal class RoomSelectionViewModel(
     )
 
     companion object {
-        const val TAG = "RoomSelectionViewModel"
+        private const val TAG = "RoomSelectionViewModel"
     }
 }

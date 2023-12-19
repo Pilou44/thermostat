@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -57,26 +58,11 @@ internal fun NavigationHost(
     modifier: Modifier = Modifier,
 ) {
     Log.d("TEST", "Recompose NavigationHost")
-    val thermostatViewModel = viewModel<ThermostatViewModel>(
-        viewModelStoreOwner = activity,
-        key = ThermostatViewModel.TAG,
-    )
-    val settingsViewModel = viewModel<SettingsViewModel>(
-        viewModelStoreOwner = activity,
-        key = SettingsViewModel.TAG,
-    )
-    val authenticationViewModel = viewModel<AuthenticationViewModel>(
-        viewModelStoreOwner = activity,
-        key = AuthenticationViewModel.TAG,
-    )
-    val roomSelectionViewModel = viewModel<RoomSelectionViewModel>(
-        viewModelStoreOwner = activity,
-        key = RoomSelectionViewModel.TAG,
-    )
 
     NavHost(navController = navController, startDestination = AUTHENTICATION_SCREEN, modifier) {
 
         composable(AUTHENTICATION_SCREEN) {
+            val authenticationViewModel = getAuthenticationViewModel(owner = activity)
             AuthenticationScreen(
                 viewModel = authenticationViewModel,
                 signIn = signIn,
@@ -86,6 +72,7 @@ internal fun NavigationHost(
         }
 
         composable(ROOM_SELECTION_SCREEN) {
+            val roomSelectionViewModel = getRoomSelectionViewModel(owner = activity)
             RoomSelectionScreen(
                 viewModel = roomSelectionViewModel,
                 onRoomSelected = { roomId -> navController.navigate("$THERMOSTAT_COMMAND_SCREEN/$roomId") },
@@ -99,7 +86,7 @@ internal fun NavigationHost(
             ),
         ) {
             val roomId = requireNotNull(it.arguments?.getString(ARG_ROOM_ID))
-            Log.d("TEST", "Recompose Navigation ThermostatScreen $roomId")
+            val thermostatViewModel = getThermostatViewModel(owner = activity)
             thermostatViewModel.setRoomId(roomId)
             ThermostatScreen(
                 viewModel = thermostatViewModel,
@@ -114,6 +101,8 @@ internal fun NavigationHost(
                 navArgument(ARG_ROOM_ID) { type = NavType.StringType },
             ),
         ) {
+            val thermostatViewModel = getThermostatViewModel(owner = activity)
+            val settingsViewModel = getSettingsViewModel(owner = activity)
             val roomId = requireNotNull(it.arguments?.getString(ARG_ROOM_ID))
             settingsViewModel.reload(roomId)
             SettingsScreen(
@@ -134,8 +123,28 @@ internal fun NavigationHost(
             val day = requireNotNull(it.arguments?.getInt(ARG_DAY))
             DaySettingsScreen(
                 day = day,
-                viewModel = thermostatViewModel,
+                viewModel = getThermostatViewModel(owner = activity),
             )
         }
     }
 }
+
+@Composable
+private fun getThermostatViewModel(owner: ViewModelStoreOwner) = viewModel<ThermostatViewModel>(
+    viewModelStoreOwner = owner,
+)
+
+@Composable
+private fun getSettingsViewModel(owner: ViewModelStoreOwner) = viewModel<SettingsViewModel>(
+    viewModelStoreOwner = owner,
+)
+
+@Composable
+private fun getAuthenticationViewModel(owner: ViewModelStoreOwner) = viewModel<AuthenticationViewModel>(
+    viewModelStoreOwner = owner,
+)
+
+@Composable
+private fun getRoomSelectionViewModel(owner: ViewModelStoreOwner) = viewModel<RoomSelectionViewModel>(
+    viewModelStoreOwner = owner,
+)
