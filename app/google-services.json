@@ -15,11 +15,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "1049859573645-4ln3th29ar5crmrhv3bfh1vm8e8g1m80.apps.googleusercontent.com",
+          "client_id": "1049859573645-tsmrminofai5m26aoe6l6blnt7fl32du.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.wechantloup.thermostat",
-            "certificate_hash": "46662519516775809e64893c29fcfa82daa86947"
+            "certificate_hash": "4fa4643ccb350c6245066f87458bb5a269c3ee80"
           }
         },
         {

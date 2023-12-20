@@ -32,13 +32,13 @@ android {
             storeFile = file("../keys/release.jks")
             storePassword = "release"
             keyAlias = "release"
-            keyPassword = "release"
+            keyPassword = "?iHHhjP333x"
         }
         create("uploadKey") {
-            storeFile = file("../keys/keys.jks")
-            storePassword = "Br@ngwin"
+            storeFile = file("../keys/upload.jks")
+            storePassword = "upload"
             keyAlias = "upload"
-            keyPassword = "AndroidRelease"
+            keyPassword = "CB7?27Ov@y>4"
         }
     }
 
@@ -50,7 +50,7 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
-            isDebuggable = true
+            isDebuggable = false
             isMinifyEnabled = false
 //            postprocessing {
 //                isRemoveUnusedCode = true
@@ -58,7 +58,7 @@ android {
 //                isOptimizeCode = true
 //            }
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("releaseKey")
+            signingConfig = signingConfigs.getByName("uploadKey")
         }
     }
     compileOptions {
