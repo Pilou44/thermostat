@@ -73,9 +73,13 @@ internal fun NavigationHost(
 
         composable(ROOM_SELECTION_SCREEN) {
             val roomSelectionViewModel = getRoomSelectionViewModel(owner = activity)
+            val thermostatViewModel = getThermostatViewModel(owner = activity)
             RoomSelectionScreen(
                 viewModel = roomSelectionViewModel,
-                onRoomSelected = { roomId -> navController.navigate("$THERMOSTAT_COMMAND_SCREEN/$roomId") },
+                onRoomSelected = { roomId ->
+                    thermostatViewModel.setRoomId(roomId)
+                    navController.navigate("$THERMOSTAT_COMMAND_SCREEN/$roomId")
+                },
             )
         }
 
@@ -87,7 +91,6 @@ internal fun NavigationHost(
         ) {
             val roomId = requireNotNull(it.arguments?.getString(ARG_ROOM_ID))
             val thermostatViewModel = getThermostatViewModel(owner = activity)
-            thermostatViewModel.setRoomId(roomId)
             ThermostatScreen(
                 viewModel = thermostatViewModel,
                 goToSettings = { navController.navigate("$THERMOSTAT_SETTINGS_SCREEN/$roomId") },

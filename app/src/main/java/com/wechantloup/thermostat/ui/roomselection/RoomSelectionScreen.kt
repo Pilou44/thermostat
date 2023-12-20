@@ -15,8 +15,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.wechantloup.thermostat.R
+import com.wechantloup.thermostat.model.Device
 import com.wechantloup.thermostat.ui.compose.Loader
 import com.wechantloup.thermostat.ui.compose.TopAppBar
+import com.wechantloup.thermostat.ui.theme.Dimens
 
 @Composable
 internal fun RoomSelectionScreen(
@@ -35,7 +37,7 @@ internal fun RoomSelectionScreen(
 @Composable
 private fun RoomSelectionScreen(
     isLoading: Boolean,
-    availableRooms: List<String>,
+    availableRooms: List<Device>,
     onRoomSelected: (String) -> Unit,
 ) {
 
@@ -47,7 +49,8 @@ private fun RoomSelectionScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(it)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(horizontal = Dimens.spacing2w),
         ) {
             items(
                 count = availableRooms.size,
@@ -68,13 +71,16 @@ private fun RoomSelectionScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Room(
-    room: String,
+    room: Device,
     onRoomSelected: (String) -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        onClick = { onRoomSelected(room) },
+        onClick = { onRoomSelected(room.id) },
     ) {
-        Text(room)
+        Text(
+            text = room.name,
+            modifier = Modifier.padding(Dimens.spacing2w),
+        )
     }
 }

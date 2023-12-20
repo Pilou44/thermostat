@@ -23,13 +23,13 @@ internal class RoomSelectionViewModel(
             val availableRooms = Device.getAll()
             _stateFlow.emit(stateFlow.value.copy(
                 loading = false,
-                availableRooms = availableRooms.map { it.id }.toImmutableList(),
+                availableRooms = availableRooms.toImmutableList(),
             ))
         }
     }
     internal data class RoomSelectionSate(
         val loading: Boolean = true,
-        val availableRooms: ImmutableList<String> = persistentListOf(),
+        val availableRooms: ImmutableList<Device> = persistentListOf(),
     )
 
     companion object {
