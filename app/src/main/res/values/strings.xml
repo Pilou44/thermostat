@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Thermostat</string>
+    <string name="app_name">My House</string>
     <string name="power_label">Power</string>
     <string name="manual_mode_label">Manual</string>
     <string name="auto_mode_label">Automatic</string>

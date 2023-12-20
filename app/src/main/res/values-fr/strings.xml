@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">Ma Maison</string>
+    <string name="power_label">Marche</string>
+    <string name="manual_mode_label">Manuel</string>
+    <string name="auto_mode_label">Automatique</string>
+    <string name="current_temperature_label">Température actuelle</string>
+    <string name="current_humidity_label">Humidité actuelle</string>
+    <string name="float_temperature_label">%.1f°C</string>
+    <string name="humidity_label">%d%%</string>
+    <string name="last_time_updated_label">Mis à jour le : %s</string>
+    <string name="int_temperature_label">%d°C</string>
+    <string name="sign_in_button_label">S\'identifier</string>
+    <string name="sign_out_button_label">Se déconnecter</string>
+    <string name="validate_button_label">Valider</string>
+    <string name="unpair_button_label">Dissocier</string>
+    <string name="delete_button_label">Supprimer</string>
+    <string name="settings_button_label">Paramètres</string>
+    <string name="device_id_label">ID du thermostat : %s</string>
+    <string name="name_label">Nom</string>
+    <string name="add_switch_button_label">Ajouter un switch</string>
+    <string name="not_allowed_message">Vous n\'êtes pas autorisé à utiliser cette application.</string>
+    <string name="unused_switch_label">%s (inutilisé)</string>
+    <string name="used_switch_label">%s (utilisé par \'%s\')</string>
+    <string name="create_new_switch_label">Créer un nouveau switch</string>
+    <string name="switches_label">Switches</string>
+    <string name="ip_label">Adresse IP</string>
+    <string name="create_switch_dialog_title">Créer un nouveau switch</string>
+    <string name="remove_switch_dialog_title">Voulez-vous dissocier ou supprimer ce switch ?</string>
+    <string name="shelly_plus_1_type">Shelly Plus 1</string>
+    <string name="bad_ip_error_message">Mauvvaise adress IP</string>
+    <string name="used_ip_error_message">Adresse IP déjà utilisée</string>
+    <string name="unknown_error_message">Erreur inconnue</string>
+    <string name="day_label">Jour</string>
+    <string name="night_label">Nuit</string>
+    <string name="from_time_to_time">De %dh à %dh</string>
+</resources>
