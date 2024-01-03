@@ -74,9 +74,12 @@ def set_time():
 
 def connect():
     wlan.connect(ssid, password)
-    while wlan.isconnected() == False:
+    while wlan.status() == 1: #STAT_CONNECTING
         print('Waiting for connection...')
         time.sleep(1)
+    if wlan.status() != 3:
+        print('Failed. Retry')
+        return connect()
     ip = wlan.ifconfig()[0]
     print(f'Connected on {ip}')
     return ip
