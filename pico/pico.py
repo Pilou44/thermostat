@@ -245,7 +245,7 @@ def getSwitches():
         paired = switch['pairedDeviceId'] == uniqueId
         if paired:
             filtered.append(f"""{{"address":"{address.replace("-", ".")}", "type":"{switchType}"}}""")
-        return filtered
+    return filtered
 
 def switchShellyP1On(address, on):
     print(f'Switch on Shelly @ {address}')
