@@ -1,14 +1,10 @@
 import network
 import socket
 import time
-#from picozero import pico_temp_sensor, pico_led
 import machine
 import onewire
 import ds18x20
 import dht
-#import ujson
-#import urequests
-#import gc
 
 uniqueId = ""
 
@@ -62,7 +58,7 @@ def connect():
 def initTemperature():
     global dht11_connected
     global ds18b20_connected
-    
+
     try:
         dht11_sensor.measure()
         print("DHT11 connected")
@@ -70,7 +66,7 @@ def initTemperature():
     except OSError as e:
         print("DHT11 not connected")
         dht11_connected = False
-    
+
     global ds18b20_rom
     roms = ds18b20_sensor.scan()
     if roms:
@@ -80,7 +76,7 @@ def initTemperature():
     else:
         print("DS18B20 not connected")
         ds18b20_connected = False
-    
+
     return ds18b20_connected or dht11_connected
 
 def readTemperature():
@@ -123,40 +119,40 @@ def run():
     while not wlan.isconnected():
         led_R_pin.low()
         connect()
-    
+
     # Open a socket
     addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
-     
+
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind(addr)
     s.listen(1)
-     
+
     # Display your IP address
     print('listening on', addr)
 
     while wlan.isconnected():
         try:
-            #Get the measurements from the sensor
-            temperature = readTemperature()
-            print(f"Temperature: {temperature}°C")
-            
             cl, addr = s.accept()
             print('client connected from', addr)
             request = cl.recv(1024)
             request = str(request)
             print(request)
-            
+
+            #Get the measurements from the sensor
+            temperature = readTemperature()
+            print(f"Temperature: {temperature}°C")
+
             # display the webpage for the customer
             html = webpage(temperature)
             cl.send('HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n')
             cl.send(html)
             cl.close()
-            
+
         except OSError as e:
             cl.close()
             print('connection closed')
-    
+
     run()
 
 if init():
@@ -168,4 +164,3 @@ if init():
 #         except Exception as e:
 #             print(e)
 #             pass
-
