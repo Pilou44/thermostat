@@ -161,6 +161,6 @@ if init():
             run()
         except KeyboardInterrupt:
             machine.reset()
-#         except Exception as e:
-#             print(e)
-#             pass
+        except Exception as e:
+            print(e)
+            pass
