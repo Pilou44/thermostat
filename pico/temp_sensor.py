@@ -5,6 +5,7 @@ import machine
 import onewire
 import ds18x20
 import dht
+import json
 
 uniqueId = ""
 
@@ -26,34 +27,18 @@ dht11_sensor = dht.DHT11(dht11_pin)
 ds18b20_sensor = ds18x20.DS18X20(onewire.OneWire(ds18b20_pin))
 ds18b20_rom = 0
 
-def webpage(temperature):
-    html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <title>Pico DHT22</title>
-        </head>
-        <body>
-            <h1>Pico W - DHT22</h1>
-            <font size="+2">
-            <p>Temperature: {temperature}C</p>
-            </font>
-        </body>
-        </html>
-        """
-    return str(html)
-
 def connect():
     wlan.connect(ssid, password)
     while wlan.status() == 1: #STAT_CONNECTING
         print('Waiting for connection...')
         time.sleep(1)
     if wlan.status() != 3:
-        print('Failed. Retry')
-        return connect()
+        print('Failed.')
+        time.sleep(1)
+        return False
     ip = wlan.ifconfig()[0]
     print(f'Connected on {ip}')
-    return ip
+    return True
 
 def initTemperature():
     global dht11_connected
@@ -80,19 +65,22 @@ def initTemperature():
     return ds18b20_connected or dht11_connected
 
 def readTemperature():
-    if dht11_connected:
-        dht11_sensor.measure()
-        temperature = dht11_sensor.temperature()
-        humidity =  dht11_sensor.humidity()
-    elif ds18b20_connected:
+    temperature = float(-1)
+    if ds18b20_connected:
         ds18b20_sensor.convert_temp()
         time.sleep_ms(750)
-        temperature = ds18b20_sensor.read_temp(ds18b20_rom)
-        humidity = float(-1)
+        return ds18b20_sensor.read_temp(ds18b20_rom)
+    elif dht11_connected:
+        temp = dht11_sensor.measure()
+        return dht11_sensor.temperature()
     else:
-        temperature = float(-1)
-        humidity = float(-1)
-    return temperature
+        return float(-1)
+
+def readHumidity():
+    if dht11_connected:
+        return dht11_sensor.humidity()
+    else:
+        return -1
 
 def getId():
     id = machine.unique_id()
@@ -116,9 +104,11 @@ def init():
 
 def run():
     print('Start')
+    led_R_pin.low()
     while not wlan.isconnected():
-        led_R_pin.low()
         connect()
+
+    led_R_pin.high()
 
     # Open a socket
     addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
@@ -142,11 +132,21 @@ def run():
             #Get the measurements from the sensor
             temperature = readTemperature()
             print(f"Temperature: {temperature}°C")
+            humidity = readHumidity()
+            print(f"Humidity: {humidity}%")
 
-            # display the webpage for the customer
-            html = webpage(temperature)
-            cl.send('HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n')
-            cl.send(html)
+            # prep the data to send to Home Assistant as type Json
+            if humidity == -1:
+                data = { "temp": temperature }
+            else:
+                data = { "temp": temperature, "hum": humidity }
+            JsonData = json.dumps(data)
+
+            # Send headers notifying the receiver that the data is of type Json for application consumption 
+            cl.send('HTTP/1.0 200 OK\r\nContent-type: application/json\r\n\r\n')
+            # Send the Json data
+            cl.send(JsonData)
+            # Close the connection
             cl.close()
 
         except OSError as e:
