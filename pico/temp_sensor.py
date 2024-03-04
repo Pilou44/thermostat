@@ -65,7 +65,8 @@ def initTemperature():
     return ds18b20_connected or dht11_connected
 
 def readTemperature():
-    temperature = float(-1)
+    if dht11_connected:
+        temp = dht11_sensor.measure()
     if ds18b20_connected:
         ds18b20_sensor.convert_temp()
         time.sleep_ms(750)
